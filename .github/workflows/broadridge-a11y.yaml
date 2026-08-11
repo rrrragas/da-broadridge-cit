@@ -1,0 +1,46 @@
+name: Accessibility
+on:
+  pull_request:
+    branches: [main]
+
+# Audits the branch preview with axe-core (WCAG 2.1 A/AA). See docs/broadridge-EDS-RULES.md §7.
+# Playwright + @axe-core/playwright are installed ad hoc (--no-save) so package-lock.json
+# stays in sync and the Build workflow's `npm ci` is unaffected.
+#
+# Lighthouse/PageSpeed is NOT duplicated here: AEM Code Sync runs the PSI "keeping-it-100"
+# check on pull requests automatically (https://www.aem.live/developer/keeping-it-100).
+#
+# REPORT-ONLY for sprint one: `continue-on-error` keeps violations from failing the PR while the
+# baseline is brought to green. To make it blocking, remove the two `continue-on-error: true` lines.
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install a11y tooling (unsaved)
+        run: |
+          npm install --no-save @axe-core/playwright playwright
+          npx playwright install --with-deps chromium
+      - name: Wait for branch preview
+        continue-on-error: true
+        env:
+          PREVIEW: https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page/
+        run: |
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW" || true)
+            echo "attempt $i: $PREVIEW -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "Preview not ready after retries" && exit 1
+      - name: Run axe-core
+        continue-on-error: true
+        env:
+          PREVIEW: https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page/
+        run: npm run broadridge:test:a11y -- "$PREVIEW"
