@@ -179,14 +179,15 @@ Three verification passes were run. The prior artifact had two material errors a
 - [x] Fix core gaps found in preview: `scripts.js` now handles `section-metadata` + page `metadata` (slim `aem.js` omits it); `styles.css` `light-grey` section; cleanup transformer strips stray "ACCEPT" + demotes over-long headings.
 - [x] Images wired to source URLs with alt text (hero bg, characteristics photo, closing CTA photo). *(Optimization/local hosting handled at DA publish time.)*
 
-### Phase 4 — Core sibling pages (M4)
-- [ ] Migrate `/cit/cit-services` (brochure download card).
-- [ ] Migrate `/cit/matrix-cits` (assemble 22-item offerings grid).
-- [ ] Migrate `/cit/broker-dealer-platform` (3 cards + diagram).
-- [ ] Migrate `/cit/banks-and-trusts` (5-item list + diagram).
-- [ ] Migrate `/cit/tpas-and-record-keepers` (bullet list + diagram).
-- [ ] Migrate `/cit/financial-advisers` (two-column list).
-- [ ] Migrate `/cit/about-us` (value-prop + solutions list + branding).
+### Phase 4 — Core sibling pages (M4) — ✅ complete
+- [x] Migrate `/cit/cit-services` (hero + intro + 6-item services list as default content + brochure PDF link + columns CTA + form).
+- [x] Migrate `/cit/matrix-cits` (**cards `offerings` variant — 23 fund tiles** with images, linked titles, subadvisor lines + disclaimer default content). Captured all 23 fund slugs for Phase 5.
+- [x] Migrate `/cit/broker-dealer-platform` (hero + intro + diagram + **cards `feature` 3-tile** + columns CTA + form).
+- [x] Migrate `/cit/banks-and-trusts` (hero + intro + diagram + 5-item list as default content + columns CTA + form).
+- [x] Migrate `/cit/tpas-and-record-keepers` (hero + intro + diagram + 8-item list as default content + columns CTA + form).
+- [x] Migrate `/cit/financial-advisers` (hero + intro + **columns base — 2-column solutions list** + columns CTA + form).
+- [x] Migrate `/cit/about-us` (hero + intro + value-prop + 12-item list as default content + columns CTA + form).
+- [x] All 8 core pages verified: lean block palette (`hero-banner`, `cards` feature/offerings, `columns` base/compare, `form-contact`); bulleted lists kept as default content per David's Model; lint clean. *(Commit local; push pending a transient credential retry.)*
 
 ### Phase 5 — Fund detail pages (M5)
 - [ ] Build bulk import infrastructure (parser/transformer) for the fund-detail template.
