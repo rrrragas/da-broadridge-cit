@@ -1,0 +1,55 @@
+.columns-compare > div {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.columns-compare img {
+  width: 100%;
+}
+
+.columns-compare > div > .columns-compare-img-col img {
+  display: block;
+}
+
+/* comparison lists: remove default markers, use icon bullets */
+.columns-compare ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.columns-compare li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 12px;
+}
+
+.columns-compare li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+}
+
+.columns-compare .columns-compare-positive li::before {
+  content: "\2713"; /* check mark */
+  color: var(--brand-check);
+}
+
+.columns-compare .columns-compare-negative li::before {
+  content: "\2717"; /* ballot X */
+  color: var(--brand-cross);
+}
+
+@media (width >= 900px) {
+  .columns-compare > div {
+    align-items: flex-start;
+    flex-direction: unset;
+    gap: 48px;
+  }
+
+  .columns-compare > div > div {
+    flex: 1;
+  }
+}

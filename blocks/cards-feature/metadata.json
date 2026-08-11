@@ -1,0 +1,38 @@
+{
+  "variantName": "cards-feature",
+  "baseBlock": "cards",
+  "version": "1.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "middle"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "accent",
+    "density": "compact",
+    "purpose": "feature",
+    "imagePattern": "noimg"
+  },
+  "contentPattern": {
+    "structure": "title + description, whole tile linked",
+    "buttonCount": 0,
+    "imageCount": 0
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "small grids of clickable text-only feature tiles",
+      "navigation cards linking to sibling pages",
+      "2-4 equal promo tiles with a bold title and short blurb"
+    ],
+    "notSuitableFor": [
+      "image-led product/article cards (use an image variant)",
+      "cards requiring per-item distinct styling"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  }
+}

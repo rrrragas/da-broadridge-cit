@@ -1,6 +1,10 @@
+/**
+ * columns-media: side-by-side content + media variant (text column beside an image column).
+ * @param {Element} block The block element
+ */
 export default function decorate(block) {
   const cols = [...block.firstElementChild.children];
-  block.classList.add(`columns-${cols.length}-cols`);
+  block.classList.add(`columns-media-${cols.length}-cols`);
 
   // setup image columns
   [...block.children].forEach((row) => {
@@ -10,7 +14,7 @@ export default function decorate(block) {
         const picWrapper = pic.closest('div');
         if (picWrapper && picWrapper.children.length === 1) {
           // picture is only content in column
-          picWrapper.classList.add('columns-img-col');
+          picWrapper.classList.add('columns-media-img-col');
         }
       }
     });

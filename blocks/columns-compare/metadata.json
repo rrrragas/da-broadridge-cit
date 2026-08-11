@@ -1,0 +1,38 @@
+{
+  "variantName": "columns-compare",
+  "baseBlock": "columns",
+  "version": "1.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "middle"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "light",
+    "density": "compact",
+    "purpose": "comparison",
+    "imagePattern": "noimg"
+  },
+  "contentPattern": {
+    "structure": "two side-by-side lists with positive (check) vs negative (X) icon bullets",
+    "buttonCount": 0,
+    "imageCount": 0
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "'is / is not' comparison lists",
+      "pros vs cons layouts",
+      "two equal side-by-side bulleted lists with icon markers"
+    ],
+    "notSuitableFor": [
+      "content-and-image side-by-side sections (use columns-media)",
+      "layouts needing more than two comparison columns"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  }
+}

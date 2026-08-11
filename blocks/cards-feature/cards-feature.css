@@ -1,0 +1,71 @@
+.cards-feature > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.cards-feature > ul > li {
+  position: relative;
+  background-color: var(--brand-blue);
+  color: var(--background-color);
+  transition: background-color 0.2s ease;
+}
+
+.cards-feature > ul > li:hover,
+.cards-feature > ul > li:focus-within {
+  background-color: var(--brand-navy);
+}
+
+.cards-feature .cards-feature-card-body {
+  margin: 0;
+  padding: 24px 40px 24px 36px;
+}
+
+.cards-feature .cards-feature-card-body h1,
+.cards-feature .cards-feature-card-body h2,
+.cards-feature .cards-feature-card-body h3,
+.cards-feature .cards-feature-card-body h4,
+.cards-feature .cards-feature-card-body h5,
+.cards-feature .cards-feature-card-body h6 {
+  margin: 0 0 12px;
+  color: var(--background-color);
+  font-size: var(--heading-font-size-xs);
+  font-weight: 600;
+}
+
+.cards-feature .cards-feature-card-body p {
+  margin: 0;
+  color: var(--background-color);
+  font-size: var(--body-font-size-s);
+}
+
+/* whole tile is clickable via a stretched link */
+.cards-feature .cards-feature-card-body a:any-link {
+  color: var(--background-color);
+  text-decoration: none;
+}
+
+.cards-feature > ul > li.cards-feature-clickable .cards-feature-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.cards-feature .cards-feature-card-image {
+  line-height: 0;
+}
+
+.cards-feature > ul > li img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+@media (width >= 600px) {
+  .cards-feature > ul {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

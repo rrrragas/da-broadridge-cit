@@ -1,0 +1,38 @@
+{
+  "variantName": "columns-media",
+  "baseBlock": "columns",
+  "version": "1.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "middle"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "light",
+    "density": "spacious",
+    "purpose": "feature",
+    "imagePattern": "large"
+  },
+  "contentPattern": {
+    "structure": "text column (heading + copy + optional button) beside an image column",
+    "buttonCount": 1,
+    "imageCount": 1
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "content-and-media side-by-side sections",
+      "text with a supporting photo",
+      "closing CTA rows with a button beside an image"
+    ],
+    "notSuitableFor": [
+      "comparison lists with icon bullets (use columns-compare)",
+      "three-or-more equal text columns without media"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 2,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  }
+}
