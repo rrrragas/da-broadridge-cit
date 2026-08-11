@@ -7,7 +7,15 @@
     "lint:js": "eslint .",
     "lint:css": "stylelint \"blocks/**/*.css\" \"styles/*.css\"",
     "lint": "npm run lint:js && npm run lint:css",
-    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix"
+    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix",
+    "broadridge:check:breakpoints": "node tools/quality/broadridge-breakpoint-check.mjs",
+    "broadridge:check:svg": "node tools/quality/broadridge-svg-size-check.mjs",
+    "broadridge:check:colors": "node tools/quality/broadridge-color-token-check.mjs",
+    "broadridge:check:security": "node tools/quality/broadridge-security-check.mjs",
+    "broadridge:check:redirects": "node tools/quality/broadridge-redirect-map-check.mjs",
+    "broadridge:check": "npm run broadridge:check:breakpoints && npm run broadridge:check:svg && npm run broadridge:check:colors && npm run broadridge:check:security && npm run broadridge:check:redirects",
+    "broadridge:test:unit": "vitest run",
+    "broadridge:test:a11y": "node tools/quality/broadridge-a11y-check.mjs"
   },
   "repository": {
     "type": "git",
@@ -25,6 +33,7 @@
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.32.0",
     "stylelint": "17.14.1",
-    "stylelint-config-standard": "40.0.0"
+    "stylelint-config-standard": "40.0.0",
+    "vitest": "^4.1.10"
   }
 }

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix)",
+      "Bash(npm run broadridge:check)",
+      "Bash(npm run broadridge:check:breakpoints)",
+      "Bash(npm run broadridge:check:svg)",
+      "Bash(npm run broadridge:check:colors)",
+      "Bash(node tools/quality/*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node tools/quality/broadridge-breakpoint-check.mjs 1>/dev/null"
+          }
+        ]
+      }
+    ]
+  }
+}
