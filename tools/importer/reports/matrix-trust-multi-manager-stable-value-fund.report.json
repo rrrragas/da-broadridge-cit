@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/matrix-trust-multi-manager-stable-value-fund",
+  "path": "matrix-trust-multi-manager-stable-value-fund",
+  "timestamp": "2026-08-11T17:28:04.070Z",
+  "title": "Matrix Trust Multi Manager Stable Value Fund | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

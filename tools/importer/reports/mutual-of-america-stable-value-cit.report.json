@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/mutual-of-america-stable-value-cit",
+  "path": "mutual-of-america-stable-value-cit",
+  "timestamp": "2026-08-11T17:26:19.237Z",
+  "title": "Mutual of America Stable Value CIT",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

@@ -17,6 +17,231 @@
 
 const TransformHook = { beforeTransform: 'beforeTransform', afterTransform: 'afterTransform' };
 
+// Cleaned link text: strip the hidden "Opens in new window(PDF:KB)" spacer spans
+// (display:none) the CIT site nests inside every document anchor, and collapse
+// whitespace to a single line.
+function cleanLinkLabel(a) {
+  const clone = a.cloneNode(true);
+  clone.querySelectorAll('[style*="display"]').forEach((n) => {
+    if (/display\s*:\s*none/i.test(n.getAttribute('style') || '')) n.remove();
+  });
+  return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+// Build a clean <ul> of <li><a href>label</a></li> from a list of source anchors,
+// preserving every href verbatim (PDF or external — e.g. goalpath rewrites two
+// flat links to DocuSign at runtime). Anchors with no meaningful label are skipped.
+function buildLinkList(anchors, doc) {
+  const ul = doc.createElement('ul');
+  anchors.forEach((a) => {
+    const href = a.getAttribute('href');
+    if (!href) return;
+    const label = cleanLinkLabel(a);
+    if (!label) return;
+    const na = doc.createElement('a');
+    na.setAttribute('href', href);
+    na.textContent = label;
+    const li = doc.createElement('li');
+    li.appendChild(na);
+    ul.appendChild(li);
+  });
+  return ul.children.length ? ul : null;
+}
+
+/**
+ * CIT fund-detail page normalization (guarded, backward-compatible).
+ *
+ * This runs on the "fund-detail" template pages (Mutual of America Stable Value,
+ * Equity Armor, GoalPath, and the ~20 sibling fund pages). It is a hard NO-OP on
+ * every other CIT page: the whole routine is gated on `section.divided-welcome`,
+ * a wrapper that exists ONLY on fund-detail pages (verified absent on all eight
+ * previously-migrated pages: cit-landing, matrix-cits, cit-services, about-us,
+ * banks-and-trusts, broker-dealer-platform, financial-advisers, tpas-and-record-
+ * keepers). Runs in beforeTransform so the NOTE relocation happens BEFORE the
+ * hero parser replaces the hero <section> (which nests the NOTE band).
+ *
+ * Fund-detail source shape (all under #main-content):
+ *   - section.et_pb_fullwidth_header_0 : hero (H1 fund name + optional subhead),
+ *     with the risk-disclaimer NOTE nested inside as .et_pb_fullwidth_header_scroll.
+ *   - section.divided-welcome : .left-side = <h3>-wrapped description paragraph(s);
+ *     .right-side ul = flat document links (li>h4>a) + empty spacer <li>s.
+ *   - section.blue-prints (0+, e.g. GoalPath ×2) : <h2> group heading + a
+ *     .blueprint-links grid of per-sub-fund links (list-item>h4>span>a).
+ *   - div.et_pb_section_1.welcomeSection (optional, GoalPath) : subadvisor <h1> +
+ *     <h3>-wrapped blurb, plus a #disclaimer-notice popup (removed by cleanup).
+ *   - section.CTA-line : closing CTA (parsed as columns).
+ */
+function normalizeFundPage(element) {
+  const dividedWelcome = element.querySelector('section.divided-welcome');
+  if (!dividedWelcome) return; // NOT a fund-detail page — no-op.
+  const doc = element.ownerDocument;
+
+  // 1. Relocate the risk-disclaimer NOTE out of the hero. The hero parser calls
+  //    element.replaceWith(block) on the whole <section>, which would drop the
+  //    NOTE band nested inside it. Lift its paragraphs into a plain default-content
+  //    wrapper placed immediately after the hero (its own no-style section).
+  const hero = element.querySelector('section.et_pb_fullwidth_header_0');
+  const noteBand = hero && hero.querySelector('.et_pb_fullwidth_header_scroll');
+  if (hero && noteBand) {
+    const noteWrap = doc.createElement('div');
+    noteWrap.className = 'fund-note';
+    noteBand.querySelectorAll('p').forEach((p) => {
+      if (!(p.textContent || '').replace(/\s+/g, ' ').trim()) return;
+      const np = doc.createElement('p');
+      np.innerHTML = p.innerHTML; // preserve inline <strong>/<i> emphasis
+      noteWrap.appendChild(np);
+    });
+    if (noteWrap.children.length) hero.after(noteWrap);
+    noteBand.remove();
+  }
+
+  // 2. Subadvisor "visit …" link (GoalPath) is an onclick-only DiviPopup trigger
+  //    with no href; the real URL lives in the (about-to-be-removed)
+  //    #disclaimer-notice popup's continue button. Promote it to a real href so
+  //    the link survives as authorable content. Runs before the unwrap in step 3
+  //    (which copies innerHTML) and before afterTransform removes the popup.
+  const subLink = dividedWelcome.parentElement
+    && dividedWelcome.parentElement.querySelector('div.et_pb_section_1.welcomeSection a[onclick]');
+  if (subLink && !subLink.getAttribute('href')) {
+    const popupLink = element.querySelector('#disclaimer-notice a[href^="http"]');
+    if (popupLink) subLink.setAttribute('href', popupLink.getAttribute('href'));
+    subLink.removeAttribute('onclick');
+  }
+
+  // 3. Unwrap Divi heading "styling" wrappers around body copy. The fund
+  //    description (.left-side) and the subadvisor blurb are authored as a heading
+  //    that CONTAINS <p> children — visual styling, not real headings. Replace each
+  //    such wrapper with its non-empty <p> children so they become clean paragraphs.
+  //    (Guard `querySelector('p')` leaves genuine headings — e.g. the subadvisor
+  //    <h1>, which has no <p> child — untouched; that <h1> is demoted to <h2> by
+  //    the generic h1 rule below.)
+  const descScopes = [
+    ...dividedWelcome.querySelectorAll('.left-side h1, .left-side h2, .left-side h3, .left-side h4'),
+  ];
+  const subSection = dividedWelcome.parentElement
+    && dividedWelcome.parentElement.querySelector('div.et_pb_section_1.welcomeSection');
+  if (subSection) {
+    descScopes.push(...subSection.querySelectorAll('h3, h4'));
+  }
+  descScopes.forEach((h) => {
+    if (!h.querySelector('p')) return;
+    const frag = doc.createDocumentFragment();
+    [...h.children].filter((c) => c.tagName === 'P').forEach((p) => {
+      if (!(p.textContent || '').replace(/\s+/g, ' ').trim()) return;
+      const np = doc.createElement('p');
+      np.innerHTML = p.innerHTML;
+      frag.appendChild(np);
+    });
+    if (frag.childNodes.length) h.replaceWith(frag); else h.remove();
+  });
+
+  // 4. Flatten the .right-side document list to a clean <ul> of links (drop hidden
+  //    spacer spans and empty <li> placeholders; keep every real link, href verbatim).
+  dividedWelcome.querySelectorAll('.right-side ul').forEach((ul) => {
+    const anchors = [...ul.querySelectorAll(':scope > li a[href]')];
+    const newUl = buildLinkList(anchors, doc);
+    if (newUl) ul.replaceWith(newUl); else ul.remove();
+  });
+  dividedWelcome.querySelectorAll('.right-side small').forEach((s) => {
+    if (!(s.textContent || '').trim()) s.remove();
+  });
+
+  // 5. Convert each grouped/nested document section (GoalPath) into a sub-heading
+  //    (<h2>) + clean <ul> of links, preserving the per-series grouping, and
+  //    consolidate all groups into the FIRST section.blue-prints wrapper. Keeping
+  //    a single wrapper means the sections transformer (which resolves the section
+  //    by the first `section.blue-prints` match) places its <hr> break + light-grey
+  //    Section Metadata around the WHOLE grouped-documents section, with the
+  //    metadata correctly at its end — every group lives in one EDS section.
+  const blueprintSecs = [...element.querySelectorAll('section.blue-prints')];
+  if (blueprintSecs.length) {
+    const target = blueprintSecs[0];
+    blueprintSecs.forEach((sec) => {
+      const container = sec.querySelector('.blue-prints-container') || sec;
+      const heading = container.querySelector('h1, h2, h3, h4, h5, h6');
+      const anchors = [...sec.querySelectorAll('.blueprint-links a[href]')];
+      const frag = doc.createDocumentFragment();
+      if (heading) {
+        const text = (heading.textContent || '').replace(/\s+/g, ' ').trim();
+        if (text) {
+          const h = doc.createElement('h2');
+          h.textContent = text;
+          frag.appendChild(h);
+        }
+      }
+      const ul = buildLinkList(anchors, doc);
+      if (ul) frag.appendChild(ul);
+      if (sec === target) {
+        sec.innerHTML = '';
+        sec.appendChild(frag);
+      } else {
+        target.appendChild(frag);
+        sec.remove();
+      }
+    });
+  }
+}
+
+/**
+ * CIT legal-page normalization (guarded, backward-compatible).
+ *
+ * Runs on the "legal" template (Matrix Terms of Service, /cit/terms-and-conditions).
+ * It is a hard NO-OP on every other CIT page: the whole routine is gated on
+ * `div.et_pb_text_inner-conditions`, a bespoke Divi text wrapper (note the
+ * `-conditions` suffix; the standard Divi class is plain `et_pb_text_inner`) that
+ * exists ONLY on the terms-and-conditions page. Runs in beforeTransform.
+ *
+ * Legal source shape (under #main-content):
+ *   - section.et_pb_fullwidth_header_0 : hero (H1 "Matrix Terms of Service",
+ *     background-image only, empty subhead) — parsed as hero-banner.
+ *   - div.et_pb_section_1 : the full Terms body. A single
+ *     div.et_pb_text_inner-conditions holds ~30 <p> elements. The ten section
+ *     headings (Hyperlinks to Third-Party…, Matrix Company Does Not Provide…,
+ *     Arbitration and Governing Law Provisions, Acceptable Use, Security/Privacy,
+ *     Disclosure of User Information, Downtime and Interruptions in Service,
+ *     Termination, Modification, General Provisions) are authored as bold-only
+ *     paragraphs (`<p><strong>Title</strong></p>`), NOT real headings; the rest
+ *     are body prose (with inline <strong> defined-terms and one /cit/matrix-cits
+ *     link). All of it is DEFAULT CONTENT.
+ *
+ * This page has NO closing CTA (no section.CTA-line) and NO on-page Talk-to-Us
+ * trigger — the #talk-to-us flyout present in the DOM is shared header chrome (a
+ * body-level sibling of #main-header, so it escapes the header/footer removal in
+ * afterTransform) and there is no form-contact block on the legal template to
+ * consume it. Left in place, the sections transformer would relocate that raw
+ * form widget into the page body, so we remove it here.
+ */
+function normalizeLegalPage(element) {
+  const conditions = element.querySelector('div.et_pb_text_inner-conditions');
+  if (!conditions) return; // NOT the legal page — no-op.
+  const doc = element.ownerDocument;
+
+  // 1. Drop the shared Talk-to-Us flyout chrome. Removing it BEFORE the sections
+  //    transformer's beforeTransform (cleanup runs first) means that transformer's
+  //    `#talk-to-us` relocation is a no-op, so the raw form widget never lands in
+  //    the imported body. (On every other CIT page the flyout is consumed by the
+  //    form-contact parser; this removal is guarded to the legal page only.)
+  WebImporter.DOMUtils.remove(element, ['#talk-to-us']);
+
+  // 2. Promote the bold-only "heading" paragraphs to real <h2> headings. A section
+  //    heading is a <p> whose only meaningful content is a single <strong> (text
+  //    outside <strong> is empty). Body paragraphs — which carry substantial text
+  //    around their inline <strong> defined-terms — are left untouched, preserving
+  //    the complete legal prose (and the /cit/matrix-cits link) as default content.
+  [...conditions.querySelectorAll(':scope > p')].forEach((p) => {
+    if (!p.querySelector('strong')) return;
+    const clone = p.cloneNode(true);
+    clone.querySelectorAll('strong').forEach((s) => s.remove());
+    const outside = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+    if (outside !== '') return; // has prose outside the bold — real body copy.
+    const text = (p.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!text) return; // empty spacer paragraph — leave for the generic cleanup.
+    const h = doc.createElement('h2');
+    h.textContent = text;
+    p.replaceWith(h);
+  });
+}
+
 export default function transform(hookName, element, payload) {
   if (hookName === TransformHook.beforeTransform) {
     // Cookie consent overlays (would block/obscure parsing).
@@ -27,6 +252,14 @@ export default function transform(hookName, element, payload) {
       '#onetrust-banner-sdk',
       '#ot-sdk-btn-floating',
     ]);
+
+    // Fund-detail (CIT fund page) normalization. Guarded on section.divided-welcome
+    // so it is a strict no-op on every other CIT page (verified above).
+    normalizeFundPage(element);
+
+    // Legal-page (Terms of Service) normalization. Guarded on
+    // div.et_pb_text_inner-conditions so it is a strict no-op on every other CIT page.
+    normalizeLegalPage(element);
   }
 
   if (hookName === TransformHook.afterTransform) {

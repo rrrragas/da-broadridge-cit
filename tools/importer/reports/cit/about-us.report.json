@@ -1,13 +1,13 @@
 {
   "status": "success",
   "url": "https://www.broadridge.com/cit/about-us",
-  "path": "about-us",
-  "timestamp": "2026-08-11T17:20:38.914Z",
+  "path": "cit/about-us",
+  "timestamp": "2026-08-11T16:45:11.260Z",
   "title": "Matrix Trust Company | Broadridge",
-  "template": "about-us",
+  "template": "cit-landing",
   "blocks": [
     "hero-banner",
-    "columns",
-    "form-contact"
+    "form-contact",
+    "columns"
   ]
 }
