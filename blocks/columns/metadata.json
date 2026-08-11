@@ -1,0 +1,32 @@
+{
+  "variantName": "columns",
+  "baseBlock": "columns",
+  "version": "2.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "variants": {
+    "": "Base: N equal columns; an image-only column becomes columns-img-col (text | image layouts).",
+    "compare": "Two comparison lists ('X are:' vs 'X are not:') with check/cross icon bullets."
+  },
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "middle"
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "content-and-media side-by-side sections",
+      "text with a supporting photo",
+      "closing CTA rows with a button beside an image",
+      "comparison lists with icon bullets (use the 'compare' variant)"
+    ],
+    "notSuitableFor": [
+      "three-or-more equal text columns that are really default-content lists"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 3,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  },
+  "supersedes": ["columns-media", "columns-compare"]
+}

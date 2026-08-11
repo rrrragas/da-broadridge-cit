@@ -3,10 +3,9 @@
 
 // PARSER IMPORTS
 import heroBannerParser from './parsers/hero-banner.js';
-import cardsFeatureParser from './parsers/cards-feature.js';
+import cardsParser from './parsers/cards.js';
 import formContactParser from './parsers/form-contact.js';
-import columnsMediaParser from './parsers/columns-media.js';
-import columnsCompareParser from './parsers/columns-compare.js';
+import columnsParser from './parsers/columns.js';
 
 // TRANSFORMER IMPORTS
 import cleanupTransformer from './transformers/broadridge-cleanup.js';
@@ -15,16 +14,15 @@ import sectionsTransformer from './transformers/broadridge-sections.js';
 // PARSER REGISTRY
 const parsers = {
   'hero-banner': heroBannerParser,
-  'cards-feature': cardsFeatureParser,
+  cards: cardsParser,
   'form-contact': formContactParser,
-  'columns-media': columnsMediaParser,
-  'columns-compare': columnsCompareParser,
+  columns: columnsParser,
 };
 
 // PAGE TEMPLATE CONFIGURATION — embedded from page-templates.json
 const PAGE_TEMPLATE = {
   name: 'cit-landing',
-  description: 'CIT landing page: hero-banner, definition default content, cards-feature (2 tiles), form-contact (Talk to Us modal), columns-media + columns-compare (characteristics), and columns-media (closing CTA). Shared header nav and footer chrome.',
+  description: 'CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.',
   urls: [
     'https://www.broadridge.com/cit/',
   ],
@@ -37,7 +35,7 @@ const PAGE_TEMPLATE = {
       ],
     },
     {
-      name: 'cards-feature',
+      name: 'cards',
       instances: [
         '#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns',
         '.welcomeSection .et_pb_row_1.et_pb_equal_columns',
@@ -50,16 +48,11 @@ const PAGE_TEMPLATE = {
       ],
     },
     {
-      name: 'columns-media',
+      name: 'columns',
       instances: [
         '#main-content > div.et_pb_section_2 > div.et_pb_row_2',
-        '#page-container > div.et_pb_section_3 > div.et_pb_row',
-      ],
-    },
-    {
-      name: 'columns-compare',
-      instances: [
         '#main-content > div.et_pb_section_2 > div.et_pb_row_4',
+        '#page-container > div.et_pb_section_3 > div.et_pb_row',
       ],
     },
   ],
@@ -77,7 +70,7 @@ const PAGE_TEMPLATE = {
       name: 'Definition and Feature Cards',
       selector: ['#main-content > div.et_pb_section_1.welcomeSection'],
       style: 'light-grey',
-      blocks: ['cards-feature'],
+      blocks: ['cards'],
       defaultContent: ['.welcomeSection .et_pb_row_0 .et_pb_text'],
     },
     {
@@ -85,7 +78,7 @@ const PAGE_TEMPLATE = {
       name: 'Characteristics',
       selector: ['#main-content > div.et_pb_section_2'],
       style: 'light-grey',
-      blocks: ['columns-media', 'columns-compare'],
+      blocks: ['columns'],
       defaultContent: [],
     },
     {
@@ -93,7 +86,7 @@ const PAGE_TEMPLATE = {
       name: 'Closing CTA',
       selector: ['#page-container > div.et_pb_section_3'],
       style: 'light-grey',
-      blocks: ['columns-media'],
+      blocks: ['columns'],
       defaultContent: [],
     },
   ],
@@ -107,9 +100,6 @@ const transformers = [
 
 /**
  * Execute all page transformers for a specific hook.
- * @param {string} hookName - 'beforeTransform' or 'afterTransform'
- * @param {Element} element - DOM element to transform
- * @param {Object} payload - { document, url, html, params }
  */
 function executeTransformers(hookName, element, payload) {
   const enhancedPayload = { ...payload, template: PAGE_TEMPLATE };
@@ -124,9 +114,6 @@ function executeTransformers(hookName, element, payload) {
 
 /**
  * Find all blocks on the page based on the embedded template configuration.
- * @param {Document} document
- * @param {Object} template
- * @returns {Array} block instances found on the page
  */
 function findBlocksOnPage(document, template) {
   const pageBlocks = [];
@@ -138,7 +125,6 @@ function findBlocksOnPage(document, template) {
         console.warn(`Block "${blockDef.name}" selector not found: ${selector}`);
       }
       elements.forEach((element) => {
-        // dedupe: an element matched by an earlier selector for the same block is skipped
         if (seen.has(element)) return;
         seen.add(element);
         pageBlocks.push({

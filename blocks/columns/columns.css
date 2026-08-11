@@ -1,0 +1,62 @@
+.columns > div {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.columns img {
+  width: 100%;
+}
+
+.columns > div > .columns-img-col img {
+  display: block;
+}
+
+/* ---- compare variant: comparison lists with icon bullets ---- */
+.columns.compare ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.columns.compare li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 12px;
+}
+
+.columns.compare li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+}
+
+.columns.compare .columns-positive li::before {
+  content: "\2713"; /* check mark */
+  color: var(--brand-check);
+}
+
+.columns.compare .columns-negative li::before {
+  content: "\2717"; /* ballot X */
+  color: var(--brand-cross);
+}
+
+@media (width >= 900px) {
+  .columns > div {
+    align-items: center;
+    flex-direction: unset;
+    gap: 24px;
+  }
+
+  .columns > div > div {
+    flex: 1;
+    order: unset;
+  }
+
+  /* comparison columns align to top, wider gutter */
+  .columns.compare > div {
+    align-items: flex-start;
+    gap: 48px;
+  }
+}

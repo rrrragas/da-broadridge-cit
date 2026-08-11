@@ -81,7 +81,7 @@ var CustomImportScript = (() => {
     element.replaceWith(block);
   }
 
-  // tools/importer/parsers/cards-feature.js
+  // tools/importer/parsers/cards.js
   function parse2(element, { document: document2 }) {
     const cells = [];
     let columns = [...element.querySelectorAll(":scope > .et_pb_column")];
@@ -114,11 +114,11 @@ var CustomImportScript = (() => {
       }
       cells.push([cell]);
     });
-    if (!cells.length) {
+    if (cells.length <= 1) {
       element.replaceWith(...element.childNodes);
       return;
     }
-    const block = WebImporter.Blocks.createBlock(document2, { name: "cards-feature", cells });
+    const block = WebImporter.Blocks.createBlock(document2, { name: "Cards (feature)", cells });
     element.replaceWith(block);
   }
 
@@ -160,12 +160,15 @@ var CustomImportScript = (() => {
     element.replaceWith(block);
   }
 
-  // tools/importer/parsers/columns-media.js
+  // tools/importer/parsers/columns.js
+  function cleanText(node) {
+    return (node.textContent || "").replace(/\s+/g, " ").trim();
+  }
   function buildList(srcList, document2) {
     const tag = srcList.tagName.toLowerCase() === "ol" ? "ol" : "ul";
     const list = document2.createElement(tag);
     [...srcList.querySelectorAll(":scope > li")].forEach((li) => {
-      const text = li.textContent.replace(/\s+/g, " ").trim();
+      const text = cleanText(li);
       if (!text) return;
       const nli = document2.createElement("li");
       nli.textContent = text;
@@ -186,7 +189,7 @@ var CustomImportScript = (() => {
         [...node.children].forEach((c) => pushCleaned(c, document2, out));
         return;
       }
-      const text = node.textContent.replace(/\s+/g, " ").trim();
+      const text = cleanText(node);
       if (!text) return;
       const level = tag === "h1" ? "h2" : tag;
       const h = document2.createElement(level);
@@ -195,7 +198,7 @@ var CustomImportScript = (() => {
       return;
     }
     if (tag === "p") {
-      const text = node.textContent.replace(/\s+/g, " ").trim();
+      const text = cleanText(node);
       if (text) {
         const p = document2.createElement("p");
         p.textContent = text;
@@ -216,7 +219,7 @@ var CustomImportScript = (() => {
     });
     const btn = col.querySelector("a.et_pb_button, a.open-talk-to-us, .et_pb_button_module_wrapper a[href]");
     if (btn) {
-      const label = btn.textContent.replace(/\s+/g, " ").trim();
+      const label = cleanText(btn);
       if (label) {
         let href = btn.getAttribute("href") || "";
         if (!href || href === "#" || /^javascript:/i.test(href)) href = "#talk-to-us";
@@ -230,9 +233,55 @@ var CustomImportScript = (() => {
     }
     return out;
   }
+  function buildCompareColumn(col, document2) {
+    const cell = [];
+    const scope = col.querySelector(".et_pb_text_inner") || col;
+    const srcHeading = scope.querySelector("h1, h2, h3, h4, h5, h6");
+    if (srcHeading) {
+      const text = cleanText(srcHeading);
+      if (text) {
+        const h = document2.createElement("h3");
+        h.textContent = text;
+        cell.push(h);
+      }
+    }
+    const items = [];
+    scope.querySelectorAll("ul li, ol li").forEach((li) => {
+      const text = cleanText(li).replace(/^[✓✔✗✘•\-–\s]+/, "").trim();
+      if (text) items.push(text);
+    });
+    if (items.length) {
+      const ul = document2.createElement("ul");
+      items.forEach((t) => {
+        const li = document2.createElement("li");
+        li.textContent = t;
+        ul.appendChild(li);
+      });
+      cell.push(ul);
+    }
+    return cell;
+  }
+  function isCompare(columns) {
+    const textCols = columns.filter((c) => !c.querySelector("img[src]"));
+    if (textCols.length < 2) return false;
+    return textCols.every((c) => c.querySelector("ul li, ol li"));
+  }
   function parse4(element, { document: document2 }) {
     let columns = [...element.querySelectorAll(":scope > .et_pb_column")];
     if (!columns.length) columns = [...element.querySelectorAll(".et_pb_column")];
+    if (isCompare(columns)) {
+      const cellsRow = columns.map((col) => buildCompareColumn(col, document2)).filter((c) => c.length);
+      if (!cellsRow.length) {
+        element.replaceWith(...element.childNodes);
+        return;
+      }
+      const block2 = WebImporter.Blocks.createBlock(document2, {
+        name: "Columns (compare)",
+        cells: [cellsRow]
+      });
+      element.replaceWith(block2);
+      return;
+    }
     const textCell = [];
     let imageEl = null;
     columns.forEach((col) => {
@@ -247,52 +296,8 @@ var CustomImportScript = (() => {
       element.replaceWith(...element.childNodes);
       return;
     }
-    const row = [textCell.length ? textCell : "", imageEl || ""];
-    const cells = [row];
-    const block = WebImporter.Blocks.createBlock(document2, { name: "columns-media", cells });
-    element.replaceWith(block);
-  }
-
-  // tools/importer/parsers/columns-compare.js
-  function parse5(element, { document: document2 }) {
-    let columns = [...element.querySelectorAll(":scope > .et_pb_column")];
-    if (!columns.length) columns = [...element.querySelectorAll(".et_pb_column")];
-    const buildColumn = (col) => {
-      const cell = [];
-      const scope = col.querySelector(".et_pb_text_inner") || col;
-      const srcHeading = scope.querySelector("h1, h2, h3, h4, h5, h6");
-      if (srcHeading) {
-        const text = srcHeading.textContent.replace(/\s+/g, " ").trim();
-        if (text) {
-          const h = document2.createElement("h3");
-          h.textContent = text;
-          cell.push(h);
-        }
-      }
-      const items = [];
-      scope.querySelectorAll("ul li, ol li").forEach((li) => {
-        let text = li.textContent.replace(/\s+/g, " ").trim();
-        text = text.replace(/^[✓✔✗✘•\-–\s]+/, "").trim();
-        if (text) items.push(text);
-      });
-      if (items.length) {
-        const ul = document2.createElement("ul");
-        items.forEach((t) => {
-          const li = document2.createElement("li");
-          li.textContent = t;
-          ul.appendChild(li);
-        });
-        cell.push(ul);
-      }
-      return cell;
-    };
-    const cellsRow = columns.map((col) => buildColumn(col)).filter((c) => c.length);
-    if (!cellsRow.length) {
-      element.replaceWith(...element.childNodes);
-      return;
-    }
-    const cells = [cellsRow];
-    const block = WebImporter.Blocks.createBlock(document2, { name: "columns-compare", cells });
+    const cells = [[textCell.length ? textCell : "", imageEl || ""]];
+    const block = WebImporter.Blocks.createBlock(document2, { name: "Columns", cells });
     element.replaceWith(block);
   }
 
@@ -397,14 +402,13 @@ var CustomImportScript = (() => {
   // tools/importer/import-cit-landing.js
   var parsers = {
     "hero-banner": parse,
-    "cards-feature": parse2,
+    cards: parse2,
     "form-contact": parse3,
-    "columns-media": parse4,
-    "columns-compare": parse5
+    columns: parse4
   };
   var PAGE_TEMPLATE = {
     name: "cit-landing",
-    description: "CIT landing page: hero-banner, definition default content, cards-feature (2 tiles), form-contact (Talk to Us modal), columns-media + columns-compare (characteristics), and columns-media (closing CTA). Shared header nav and footer chrome.",
+    description: "CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.",
     urls: [
       "https://www.broadridge.com/cit/"
     ],
@@ -417,7 +421,7 @@ var CustomImportScript = (() => {
         ]
       },
       {
-        name: "cards-feature",
+        name: "cards",
         instances: [
           "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
           ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
@@ -430,16 +434,11 @@ var CustomImportScript = (() => {
         ]
       },
       {
-        name: "columns-media",
+        name: "columns",
         instances: [
           "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
+          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
           "#page-container > div.et_pb_section_3 > div.et_pb_row"
-        ]
-      },
-      {
-        name: "columns-compare",
-        instances: [
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_4"
         ]
       }
     ],
@@ -457,7 +456,7 @@ var CustomImportScript = (() => {
         name: "Definition and Feature Cards",
         selector: ["#main-content > div.et_pb_section_1.welcomeSection"],
         style: "light-grey",
-        blocks: ["cards-feature"],
+        blocks: ["cards"],
         defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text"]
       },
       {
@@ -465,7 +464,7 @@ var CustomImportScript = (() => {
         name: "Characteristics",
         selector: ["#main-content > div.et_pb_section_2"],
         style: "light-grey",
-        blocks: ["columns-media", "columns-compare"],
+        blocks: ["columns"],
         defaultContent: []
       },
       {
@@ -473,7 +472,7 @@ var CustomImportScript = (() => {
         name: "Closing CTA",
         selector: ["#page-container > div.et_pb_section_3"],
         style: "light-grey",
-        blocks: ["columns-media"],
+        blocks: ["columns"],
         defaultContent: []
       }
     ]

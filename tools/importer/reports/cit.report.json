@@ -2,15 +2,15 @@
   "status": "success",
   "url": "https://www.broadridge.com/cit/",
   "path": "cit",
-  "timestamp": "2026-08-11T12:54:50.945Z",
+  "timestamp": "2026-08-11T13:17:53.293Z",
   "title": "Collective Investment Trusts | Broadridge",
   "template": "cit-landing",
   "blocks": [
     "hero-banner",
-    "cards-feature",
+    "cards",
     "form-contact",
-    "columns-media",
-    "columns-media",
-    "columns-compare"
+    "columns",
+    "columns",
+    "columns"
   ]
 }

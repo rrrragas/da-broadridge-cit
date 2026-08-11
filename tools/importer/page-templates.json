@@ -9,7 +9,7 @@
         "https://www.broadridge.com/cit/"
       ],
       "coverageGaps": [],
-      "description": "CIT landing page: hero-banner, definition default content, cards-feature (2 tiles), form-contact (Talk to Us modal), columns-media + columns-compare (characteristics), and columns-media (closing CTA). Shared header nav and footer chrome.",
+      "description": "CIT landing page: hero-banner, definition default content, cards (feature variant, 2 tiles), form-contact (Talk to Us modal), columns (characteristics text+image and closing CTA) + columns (compare variant for CITs are/are not). Shared header nav and footer chrome.",
       "blocks": [
         {
           "name": "hero-banner",
@@ -19,7 +19,7 @@
           ]
         },
         {
-          "name": "cards-feature",
+          "name": "cards",
           "instances": [
             "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
             ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
@@ -32,16 +32,11 @@
           ]
         },
         {
-          "name": "columns-media",
+          "name": "columns",
           "instances": [
             "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
             "#page-container > div.et_pb_section_3 > div.et_pb_row"
-          ]
-        },
-        {
-          "name": "columns-compare",
-          "instances": [
-            "#main-content > div.et_pb_section_2 > div.et_pb_row_4"
           ]
         }
       ],
@@ -66,7 +61,7 @@
           ],
           "style": "light-grey",
           "blocks": [
-            "cards-feature"
+            "cards"
           ],
           "defaultContent": [
             ".welcomeSection .et_pb_row_0 .et_pb_text"
@@ -80,8 +75,7 @@
           ],
           "style": "light-grey",
           "blocks": [
-            "columns-media",
-            "columns-compare"
+            "columns"
           ],
           "defaultContent": []
         },
@@ -93,7 +87,7 @@
           ],
           "style": "light-grey",
           "blocks": [
-            "columns-media"
+            "columns"
           ],
           "defaultContent": []
         }

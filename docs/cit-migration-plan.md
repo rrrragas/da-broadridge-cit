@@ -164,10 +164,12 @@ Three verification passes were run. The prior artifact had two material errors a
 - [ ] `fund-detail` template/block against 2–3 sample fund pages — deferred to Phase 5.
 - [ ] Visual verification of all blocks — happens in Phase 3 when the landing page renders with real content.
 
-### Phase 3 — Landing page reference (M3)
-- [ ] Generate canonical `/cit/` HTML with metadata (Title/Description).
-- [ ] Preview locally; compare against source; iterate to match.
-- [ ] Download, optimize, and wire images (incl. diagrams) with alt text.
+### Phase 3 — Landing page reference (M3) — ✅ complete
+- [x] Build import infrastructure: `tools/importer/page-templates.json` (cit-landing), 5 parsers, 2 transformers (cleanup + sections), import script.
+- [x] Generate canonical `/cit` HTML with metadata via the import pipeline → `content/cit.plain.html` (all 6 blocks).
+- [x] Preview locally (`aem up` + `.env` html-folder) and verify: correct section order (hero → definition+cards → characteristics → closing CTA → form-contact), brand styling applied (blue cards, hero scrim, ✓/✗ compare bullets, light-grey sections), form-contact fully decorated.
+- [x] Fix core gaps found in preview: `scripts.js` now handles `section-metadata` + page `metadata` (slim `aem.js` omits it); `styles.css` `light-grey` section; cleanup transformer strips stray "ACCEPT" + demotes over-long headings.
+- [x] Images wired to source URLs with alt text (hero bg, characteristics photo, closing CTA photo). *(Optimization/local hosting handled at DA publish time.)*
 
 ### Phase 4 — Core sibling pages (M4)
 - [ ] Migrate `/cit/cit-services` (brochure download card).
