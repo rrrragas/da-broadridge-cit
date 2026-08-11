@@ -35,10 +35,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-cit-landing.js
-  var import_cit_landing_exports = {};
-  __export(import_cit_landing_exports, {
-    default: () => import_cit_landing_default
+  // tools/importer/import-about-us.js
+  var import_about_us_exports = {};
+  __export(import_about_us_exports, {
+    default: () => import_about_us_default
   });
 
   // tools/importer/parsers/hero-banner.js
@@ -532,7 +532,7 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-cit-landing.js
+  // tools/importer/import-about-us.js
   var parsers = {
     "hero-banner": parse,
     cards: parse2,
@@ -540,10 +540,10 @@ var CustomImportScript = (() => {
     columns: parse4
   };
   var PAGE_TEMPLATE = {
-    name: "cit-landing",
-    description: "CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.",
+    name: "about-us",
+    description: "CIT About Us page (Matrix Trust Company): hero-banner, intro default content (Colorado charter / 50+ yrs / SSAE18 prose), value-prop default content (heading + two paragraphs), 12-item solutions bulleted list as default content (<ul>), columns (closing CTA, text-only), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing parsers and transformers; no cards on this page.",
     urls: [
-      "https://www.broadridge.com/cit/"
+      "https://www.broadridge.com/cit/about-us"
     ],
     blocks: [
       {
@@ -554,24 +554,20 @@ var CustomImportScript = (() => {
         ]
       },
       {
-        name: "cards",
+        // Parse the inner `div.CTA-cover` so the outer `section.CTA-line` survives
+        // as the Closing CTA section wrapper. The CTA-line has no Divi columns, so
+        // the columns parser emits a single text-only column (H2 + "TALK TO US"
+        // button, javascript:void(0)/# rewritten to #talk-to-us).
+        name: "columns",
         instances: [
-          "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
-          ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          "#page-container > section.CTA-line > div.CTA-cover",
+          "section.CTA-line div.CTA-cover"
         ]
       },
       {
         name: "form-contact",
         instances: [
           "#talk-to-us"
-        ]
-      },
-      {
-        name: "columns",
-        instances: [
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
-          "#page-container > div.et_pb_section_3 > div.et_pb_row"
         ]
       }
     ],
@@ -582,31 +578,38 @@ var CustomImportScript = (() => {
         selector: ["#main-content > section.et_pb_fullwidth_header_0"],
         style: null,
         blocks: ["hero-banner"],
-        defaultContent: []
+        defaultContent: [],
+        hint: "block"
       },
       {
         id: "s2",
-        name: "Definition and Feature Cards",
+        name: "Intro",
         selector: ["#main-content > div.et_pb_section_1.welcomeSection"],
         style: "light-grey",
-        blocks: ["cards"],
-        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text"]
+        blocks: [],
+        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text_inner"],
+        hint: "default-content"
       },
       {
         id: "s3",
-        name: "Characteristics",
+        name: "Value Proposition and Solutions",
         selector: ["#main-content > div.et_pb_section_2"],
         style: "light-grey",
-        blocks: ["columns"],
-        defaultContent: []
+        blocks: [],
+        defaultContent: [
+          ".et_pb_section_2 .et_pb_row .et_pb_text_inner",
+          ".et_pb_section_2 .et_pb_row_2 .et_pb_text_inner"
+        ],
+        hint: "default-content"
       },
       {
         id: "s4",
         name: "Closing CTA",
-        selector: ["#page-container > div.et_pb_section_3"],
-        style: "light-grey",
+        selector: ["#page-container > section.CTA-line"],
+        style: null,
         blocks: ["columns"],
-        defaultContent: []
+        defaultContent: [],
+        hint: "block"
       }
     ]
   };
@@ -648,7 +651,7 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_cit_landing_default = {
+  var import_about_us_default = {
     transform: (payload) => {
       const {
         document: document2,
@@ -678,8 +681,9 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document2);
       WebImporter.rules.transformBackgroundImages(main, document2);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-      const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
-      const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
+      const pathname = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
+      const slug = pathname.split("/").filter(Boolean).pop() || "index";
+      const path = WebImporter.FileUtils.sanitizePath(`/${slug}`);
       return [{
         element: main,
         path,
@@ -691,5 +695,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_cit_landing_exports);
+  return __toCommonJS(import_about_us_exports);
 })();

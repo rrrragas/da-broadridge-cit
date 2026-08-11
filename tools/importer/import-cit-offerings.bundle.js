@@ -35,10 +35,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-cit-landing.js
-  var import_cit_landing_exports = {};
-  __export(import_cit_landing_exports, {
-    default: () => import_cit_landing_default
+  // tools/importer/import-cit-offerings.js
+  var import_cit_offerings_exports = {};
+  __export(import_cit_offerings_exports, {
+    default: () => import_cit_offerings_default
   });
 
   // tools/importer/parsers/hero-banner.js
@@ -312,19 +312,10 @@ var CustomImportScript = (() => {
     }
     return cell;
   }
-  function hasCompareHeading(col) {
-    const heading = col.querySelector("h1, h2, h3, h4, h5, h6");
-    if (!heading) return false;
-    const text = cleanText2(heading).toLowerCase();
-    return /\bare\s*:$/.test(text) || /\bare\s+not\s*:$/.test(text);
-  }
   function isCompare(columns) {
     const textCols = columns.filter((c) => !c.querySelector("img[src]"));
     if (textCols.length < 2) return false;
-    if (!textCols.every((c) => c.querySelector("ul li, ol li"))) return false;
-    const hasCompareClasses = columns.some((c) => c.querySelector("ul.checks, ul.exes"));
-    const hasCompareHeadings = textCols.some((c) => hasCompareHeading(c));
-    return hasCompareClasses || hasCompareHeadings;
+    return textCols.every((c) => c.querySelector("ul li, ol li"));
   }
   function parse4(element, { document: document2 }) {
     let columns = [...element.querySelectorAll(":scope > .et_pb_column")];
@@ -341,19 +332,6 @@ var CustomImportScript = (() => {
       });
       element.replaceWith(block2);
       return;
-    }
-    const imageCols = columns.filter((c) => c.querySelector("img[src]"));
-    const textOnlyCols = columns.filter((c) => !c.querySelector("img[src]"));
-    if (columns.length >= 2 && imageCols.length === 0 && textOnlyCols.length >= 2) {
-      const row = textOnlyCols.map((col) => {
-        const cell = collectTextColumn(col, document2);
-        return cell.length ? cell : "";
-      });
-      if (row.some((c) => c && c.length)) {
-        const block2 = WebImporter.Blocks.createBlock(document2, { name: "Columns", cells: [row] });
-        element.replaceWith(block2);
-        return;
-      }
     }
     const textCell = [];
     let imageEl = null;
@@ -426,55 +404,6 @@ var CustomImportScript = (() => {
         const txt = (el.textContent || "").trim();
         if (CONTROL_TEXT.test(txt)) el.remove();
       });
-      element.querySelectorAll('a.box-cover[href$=".pdf"], a.box-cover[href*="/pdf/"]').forEach((a) => {
-        const doc = element.ownerDocument;
-        const href = a.getAttribute("href") || "";
-        const labelSrc = a.querySelector("h1, h2, h3, h4, h5, h6") || a;
-        const label = (labelSrc.textContent || "").replace(/\s+/g, " ").trim() || "Download";
-        const link = doc.createElement("a");
-        link.setAttribute("href", href);
-        link.textContent = label;
-        const p = doc.createElement("p");
-        p.appendChild(link);
-        a.replaceWith(p);
-      });
-      element.querySelectorAll("li h1, li h2, li h3, li h4, li h5, li h6").forEach((h) => {
-        h.replaceWith(...h.childNodes);
-      });
-      const JUNK_HEADING = /^[\s \-–—•·.]*$/;
-      element.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((h) => {
-        if (h.closest("table")) return;
-        const clone = h.cloneNode(true);
-        clone.querySelectorAll('[style*="display"]').forEach((n) => {
-          if (/display\s*:\s*none/i.test(n.getAttribute("style") || "")) n.remove();
-        });
-        const visible = (clone.textContent || "").replace(/ /g, " ").trim();
-        if (visible === "" || JUNK_HEADING.test(visible)) h.remove();
-      });
-      element.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((h) => {
-        if (h.closest("table")) return;
-        const inner = h.querySelector("h1, h2, h3, h4, h5, h6");
-        if (!inner) return;
-        const ownClone = h.cloneNode(true);
-        ownClone.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((n) => n.remove());
-        ownClone.querySelectorAll('[style*="display"]').forEach((n) => {
-          if (/display\s*:\s*none/i.test(n.getAttribute("style") || "")) n.remove();
-        });
-        const outerOwn = (ownClone.textContent || "").replace(/ /g, " ").trim();
-        if (outerOwn !== "" && !JUNK_HEADING.test(outerOwn)) return;
-        const text = (inner.textContent || "").replace(/\s+/g, " ").trim();
-        if (!text) return;
-        const level = h.tagName.toLowerCase();
-        const replacement = element.ownerDocument.createElement(level);
-        replacement.textContent = text;
-        h.replaceWith(replacement);
-      });
-      element.querySelectorAll("h1").forEach((h) => {
-        if (h.closest("table") || h.closest(".et_pb_fullwidth_header")) return;
-        const h2 = element.ownerDocument.createElement("h2");
-        h2.innerHTML = h.innerHTML;
-        h.replaceWith(h2);
-      });
       element.querySelectorAll("h3, h4").forEach((h) => {
         const txt = (h.textContent || "").trim();
         if (txt.length > 180) {
@@ -532,7 +461,7 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-cit-landing.js
+  // tools/importer/import-cit-offerings.js
   var parsers = {
     "hero-banner": parse,
     cards: parse2,
@@ -540,10 +469,10 @@ var CustomImportScript = (() => {
     columns: parse4
   };
   var PAGE_TEMPLATE = {
-    name: "cit-landing",
-    description: "CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.",
+    name: "cit-offerings",
+    description: "CIT offerings page (Matrix CITs): hero-banner, intro default content, cards (offerings \u2014 23 image thumbnail fund tiles), columns (closing CTA), institutional-use disclaimer default content, form-contact. Shared header nav and footer chrome.",
     urls: [
-      "https://www.broadridge.com/cit/"
+      "https://www.broadridge.com/cit/matrix-cits"
     ],
     blocks: [
       {
@@ -554,24 +483,27 @@ var CustomImportScript = (() => {
         ]
       },
       {
+        // Parse the inner grid (`div.sextion-boxes`) so the outer `div.box-container`
+        // survives as the Offerings section wrapper (see sections below).
         name: "cards",
         instances: [
-          "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
-          ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          "#main-content > div.box-container > div.sextion-boxes",
+          "div.box-container div.sextion-boxes"
+        ]
+      },
+      {
+        // Parse the inner `div.CTA-cover` so the outer `section.CTA-line` survives
+        // as the Closing CTA section wrapper.
+        name: "columns",
+        instances: [
+          "#main-content > section.CTA-line > div.CTA-cover",
+          "section.CTA-line div.CTA-cover"
         ]
       },
       {
         name: "form-contact",
         instances: [
           "#talk-to-us"
-        ]
-      },
-      {
-        name: "columns",
-        instances: [
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
-          "#page-container > div.et_pb_section_3 > div.et_pb_row"
         ]
       }
     ],
@@ -586,27 +518,35 @@ var CustomImportScript = (() => {
       },
       {
         id: "s2",
-        name: "Definition and Feature Cards",
+        name: "Intro",
         selector: ["#main-content > div.et_pb_section_1.welcomeSection"],
         style: "light-grey",
-        blocks: ["cards"],
-        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text"]
+        blocks: [],
+        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text_inner"]
       },
       {
         id: "s3",
-        name: "Characteristics",
-        selector: ["#main-content > div.et_pb_section_2"],
+        name: "Offerings Grid",
+        selector: ["#main-content > div.box-container"],
         style: "light-grey",
-        blocks: ["columns"],
+        blocks: ["cards"],
         defaultContent: []
       },
       {
         id: "s4",
         name: "Closing CTA",
-        selector: ["#page-container > div.et_pb_section_3"],
-        style: "light-grey",
+        selector: ["#main-content > section.CTA-line"],
+        style: null,
         blocks: ["columns"],
         defaultContent: []
+      },
+      {
+        id: "s5",
+        name: "Disclaimer",
+        selector: ["#main-content > div#legal-notice"],
+        style: null,
+        blocks: [],
+        defaultContent: ["#legal-notice .et_pb_row_0 .et_pb_text_inner"]
       }
     ]
   };
@@ -648,7 +588,7 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_cit_landing_default = {
+  var import_cit_offerings_default = {
     transform: (payload) => {
       const {
         document: document2,
@@ -678,8 +618,9 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document2);
       WebImporter.rules.transformBackgroundImages(main, document2);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-      const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
-      const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
+      const pathname = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
+      const slug = pathname.split("/").filter(Boolean).pop() || "index";
+      const path = WebImporter.FileUtils.sanitizePath(`/${slug}`);
       return [{
         element: main,
         path,
@@ -691,5 +632,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_cit_landing_exports);
+  return __toCommonJS(import_cit_offerings_exports);
 })();

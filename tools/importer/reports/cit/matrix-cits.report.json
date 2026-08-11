@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/matrix-cits",
+  "path": "cit/matrix-cits",
+  "timestamp": "2026-08-11T14:30:13.239Z",
+  "title": "Matrix Trust Company Collective Investment Trusts | Broadridge",
+  "template": "cit-offerings",
+  "blocks": [
+    "hero-banner",
+    "cards",
+    "columns",
+    "form-contact"
+  ]
+}

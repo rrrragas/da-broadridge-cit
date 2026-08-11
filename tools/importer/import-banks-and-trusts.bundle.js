@@ -35,10 +35,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-cit-landing.js
-  var import_cit_landing_exports = {};
-  __export(import_cit_landing_exports, {
-    default: () => import_cit_landing_default
+  // tools/importer/import-banks-and-trusts.js
+  var import_banks_and_trusts_exports = {};
+  __export(import_banks_and_trusts_exports, {
+    default: () => import_banks_and_trusts_default
   });
 
   // tools/importer/parsers/hero-banner.js
@@ -312,19 +312,10 @@ var CustomImportScript = (() => {
     }
     return cell;
   }
-  function hasCompareHeading(col) {
-    const heading = col.querySelector("h1, h2, h3, h4, h5, h6");
-    if (!heading) return false;
-    const text = cleanText2(heading).toLowerCase();
-    return /\bare\s*:$/.test(text) || /\bare\s+not\s*:$/.test(text);
-  }
   function isCompare(columns) {
     const textCols = columns.filter((c) => !c.querySelector("img[src]"));
     if (textCols.length < 2) return false;
-    if (!textCols.every((c) => c.querySelector("ul li, ol li"))) return false;
-    const hasCompareClasses = columns.some((c) => c.querySelector("ul.checks, ul.exes"));
-    const hasCompareHeadings = textCols.some((c) => hasCompareHeading(c));
-    return hasCompareClasses || hasCompareHeadings;
+    return textCols.every((c) => c.querySelector("ul li, ol li"));
   }
   function parse4(element, { document: document2 }) {
     let columns = [...element.querySelectorAll(":scope > .et_pb_column")];
@@ -341,19 +332,6 @@ var CustomImportScript = (() => {
       });
       element.replaceWith(block2);
       return;
-    }
-    const imageCols = columns.filter((c) => c.querySelector("img[src]"));
-    const textOnlyCols = columns.filter((c) => !c.querySelector("img[src]"));
-    if (columns.length >= 2 && imageCols.length === 0 && textOnlyCols.length >= 2) {
-      const row = textOnlyCols.map((col) => {
-        const cell = collectTextColumn(col, document2);
-        return cell.length ? cell : "";
-      });
-      if (row.some((c) => c && c.length)) {
-        const block2 = WebImporter.Blocks.createBlock(document2, { name: "Columns", cells: [row] });
-        element.replaceWith(block2);
-        return;
-      }
     }
     const textCell = [];
     let imageEl = null;
@@ -451,24 +429,6 @@ var CustomImportScript = (() => {
         const visible = (clone.textContent || "").replace(/ /g, " ").trim();
         if (visible === "" || JUNK_HEADING.test(visible)) h.remove();
       });
-      element.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((h) => {
-        if (h.closest("table")) return;
-        const inner = h.querySelector("h1, h2, h3, h4, h5, h6");
-        if (!inner) return;
-        const ownClone = h.cloneNode(true);
-        ownClone.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((n) => n.remove());
-        ownClone.querySelectorAll('[style*="display"]').forEach((n) => {
-          if (/display\s*:\s*none/i.test(n.getAttribute("style") || "")) n.remove();
-        });
-        const outerOwn = (ownClone.textContent || "").replace(/ /g, " ").trim();
-        if (outerOwn !== "" && !JUNK_HEADING.test(outerOwn)) return;
-        const text = (inner.textContent || "").replace(/\s+/g, " ").trim();
-        if (!text) return;
-        const level = h.tagName.toLowerCase();
-        const replacement = element.ownerDocument.createElement(level);
-        replacement.textContent = text;
-        h.replaceWith(replacement);
-      });
       element.querySelectorAll("h1").forEach((h) => {
         if (h.closest("table") || h.closest(".et_pb_fullwidth_header")) return;
         const h2 = element.ownerDocument.createElement("h2");
@@ -532,7 +492,7 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-cit-landing.js
+  // tools/importer/import-banks-and-trusts.js
   var parsers = {
     "hero-banner": parse,
     cards: parse2,
@@ -540,10 +500,10 @@ var CustomImportScript = (() => {
     columns: parse4
   };
   var PAGE_TEMPLATE = {
-    name: "cit-landing",
-    description: "CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.",
+    name: "banks-and-trusts",
+    description: 'CIT Banks & Trusts page: hero-banner, intro/value-prop default content (value-prop paragraph + "Reduce the risk" heading + diagram image), trading-solutions default content ("Step up to customer demands" heading demoted from a second page <h1>, "A comprehensive suite" lead-in, and a 5-item feature bulleted list: ModelTool(k)it, Mutual Fund Trading Platform, ETF Trading Platform, Money Market Portal, IRA solutions), columns (closing CTA, text-only, "#"/javascript:void(0) rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/cit-offerings parsers and transformers; adds no new blocks and has no cards on this page.',
     urls: [
-      "https://www.broadridge.com/cit/"
+      "https://www.broadridge.com/cit/banks-and-trusts"
     ],
     blocks: [
       {
@@ -554,24 +514,21 @@ var CustomImportScript = (() => {
         ]
       },
       {
-        name: "cards",
+        // Closing CTA: parse the inner `div.CTA-cover` so the outer
+        // `section.CTA-line` survives as the s4 section wrapper. CTA-line has no
+        // Divi columns, so the columns parser emits a single text-only column
+        // (H2 + "TALK TO US" button, "#"/javascript:void(0) rewritten to
+        // #talk-to-us).
+        name: "columns",
         instances: [
-          "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
-          ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          "#main-content > section.CTA-line > div.CTA-cover",
+          "section.CTA-line div.CTA-cover"
         ]
       },
       {
         name: "form-contact",
         instances: [
           "#talk-to-us"
-        ]
-      },
-      {
-        name: "columns",
-        instances: [
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
-          "#page-container > div.et_pb_section_3 > div.et_pb_row"
         ]
       }
     ],
@@ -582,31 +539,38 @@ var CustomImportScript = (() => {
         selector: ["#main-content > section.et_pb_fullwidth_header_0"],
         style: null,
         blocks: ["hero-banner"],
-        defaultContent: []
+        defaultContent: [],
+        hint: "block"
       },
       {
         id: "s2",
-        name: "Definition and Feature Cards",
-        selector: ["#main-content > div.et_pb_section_1.welcomeSection"],
-        style: "light-grey",
-        blocks: ["cards"],
-        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text"]
+        name: "Intro and Value Prop",
+        selector: ['#main-content > div[style*="27px"]'],
+        style: null,
+        blocks: [],
+        defaultContent: ['#main-content > div[style*="27px"]'],
+        hint: "default-content"
       },
       {
         id: "s3",
-        name: "Characteristics",
+        name: "Trading Solutions",
         selector: ["#main-content > div.et_pb_section_2"],
         style: "light-grey",
-        blocks: ["columns"],
-        defaultContent: []
+        blocks: [],
+        defaultContent: [
+          "#main-content > div.et_pb_section_2 > div.et_pb_row_2 .et_pb_text_inner",
+          "#main-content > div.et_pb_section_2 > div.et_pb_row_4 .et_pb_text_inner"
+        ],
+        hint: "default-content"
       },
       {
         id: "s4",
         name: "Closing CTA",
-        selector: ["#page-container > div.et_pb_section_3"],
-        style: "light-grey",
+        selector: ["#main-content > section.CTA-line"],
+        style: null,
         blocks: ["columns"],
-        defaultContent: []
+        defaultContent: [],
+        hint: "block"
       }
     ]
   };
@@ -648,7 +612,7 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_cit_landing_default = {
+  var import_banks_and_trusts_default = {
     transform: (payload) => {
       const {
         document: document2,
@@ -678,8 +642,9 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document2);
       WebImporter.rules.transformBackgroundImages(main, document2);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-      const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
-      const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
+      const pathname = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
+      const slug = pathname.split("/").filter(Boolean).pop() || "index";
+      const path = WebImporter.FileUtils.sanitizePath(`/${slug}`);
       return [{
         element: main,
         path,
@@ -691,5 +656,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_cit_landing_exports);
+  return __toCommonJS(import_banks_and_trusts_exports);
 })();

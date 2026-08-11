@@ -35,10 +35,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-cit-landing.js
-  var import_cit_landing_exports = {};
-  __export(import_cit_landing_exports, {
-    default: () => import_cit_landing_default
+  // tools/importer/import-broker-dealer-platform.js
+  var import_broker_dealer_platform_exports = {};
+  __export(import_broker_dealer_platform_exports, {
+    default: () => import_broker_dealer_platform_default
   });
 
   // tools/importer/parsers/hero-banner.js
@@ -532,7 +532,7 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-cit-landing.js
+  // tools/importer/import-broker-dealer-platform.js
   var parsers = {
     "hero-banner": parse,
     cards: parse2,
@@ -540,10 +540,10 @@ var CustomImportScript = (() => {
     columns: parse4
   };
   var PAGE_TEMPLATE = {
-    name: "cit-landing",
-    description: "CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.",
+    name: "broker-dealer-platform",
+    description: 'CIT Broker-Dealer Platform page: hero-banner, intro/value-prop default content (paragraph + "Ensure compliance" heading + process-flow diagram image), cards (feature variant \u2014 3 equal tiles: Plan Level Data Feed, Fiduciary Tool(k)it, Sales Enablement Resources) preceded by the "Drive growth" heading as section default content, columns (closing CTA, text-only), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/cit-offerings parsers and transformers.',
     urls: [
-      "https://www.broadridge.com/cit/"
+      "https://www.broadridge.com/cit/broker-dealer-platform"
     ],
     blocks: [
       {
@@ -554,24 +554,28 @@ var CustomImportScript = (() => {
         ]
       },
       {
+        // Feature tiles: parse the row of three one-third columns. Leaving the
+        // outer section (`et_pb_section_2`) untouched preserves it as the s3
+        // wrapper (its `et_pb_row_2` "Drive growth" heading stays as default
+        // content above the cards block).
         name: "cards",
         instances: [
-          "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
-          ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          "#main-content > div.et_pb_section_2 > div.et_pb_row_3"
+        ]
+      },
+      {
+        // Closing CTA: parse the inner `div.CTA-cover` so the outer
+        // `section.CTA-line` survives as the s4 section wrapper.
+        name: "columns",
+        instances: [
+          "#main-content > section.CTA-line > div.CTA-cover",
+          "section.CTA-line div.CTA-cover"
         ]
       },
       {
         name: "form-contact",
         instances: [
           "#talk-to-us"
-        ]
-      },
-      {
-        name: "columns",
-        instances: [
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
-          "#page-container > div.et_pb_section_3 > div.et_pb_row"
         ]
       }
     ],
@@ -586,25 +590,25 @@ var CustomImportScript = (() => {
       },
       {
         id: "s2",
-        name: "Definition and Feature Cards",
-        selector: ["#main-content > div.et_pb_section_1.welcomeSection"],
-        style: "light-grey",
-        blocks: ["cards"],
-        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text"]
+        name: "Intro and Value Prop",
+        selector: ['#main-content > div[style*="27px"]'],
+        style: null,
+        blocks: [],
+        defaultContent: ['#main-content > div[style*="27px"]']
       },
       {
         id: "s3",
-        name: "Characteristics",
+        name: "Features",
         selector: ["#main-content > div.et_pb_section_2"],
         style: "light-grey",
-        blocks: ["columns"],
-        defaultContent: []
+        blocks: ["cards"],
+        defaultContent: ["#main-content > div.et_pb_section_2 > div.et_pb_row_2 .et_pb_text_inner"]
       },
       {
         id: "s4",
         name: "Closing CTA",
-        selector: ["#page-container > div.et_pb_section_3"],
-        style: "light-grey",
+        selector: ["#main-content > section.CTA-line"],
+        style: null,
         blocks: ["columns"],
         defaultContent: []
       }
@@ -648,7 +652,7 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_cit_landing_default = {
+  var import_broker_dealer_platform_default = {
     transform: (payload) => {
       const {
         document: document2,
@@ -678,8 +682,9 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document2);
       WebImporter.rules.transformBackgroundImages(main, document2);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-      const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
-      const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
+      const pathname = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
+      const slug = pathname.split("/").filter(Boolean).pop() || "index";
+      const path = WebImporter.FileUtils.sanitizePath(`/${slug}`);
       return [{
         element: main,
         path,
@@ -691,5 +696,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_cit_landing_exports);
+  return __toCommonJS(import_broker_dealer_platform_exports);
 })();

@@ -164,6 +164,14 @@ Three verification passes were run. The prior artifact had two material errors a
 - [ ] `fund-detail` template/block against 2–3 sample fund pages — deferred to Phase 5.
 - [ ] Visual verification of all blocks — happens in Phase 3 when the landing page renders with real content.
 
+### Block consolidation (David's Model review) — ✅ complete
+- [x] Critique all blocks against [David's Model](https://www.aem.live/docs/davidsmodel); merge near-duplicates.
+- [x] Merge `columns-media` + `columns-compare` → single **`columns`** block (base + `compare` variant).
+- [x] Merge `cards-feature` → **`cards`** block (base + `feature` variant); Phase 4 offerings grid will reuse `cards` (offerings) instead of a new block.
+- [x] Keep `hero-banner` and `form-contact` as blocks; closing CTA stays `columns` (faithful to source's text+image layout).
+- [x] Confirm default content is used where appropriate (definition paragraph, traits/comparison lists inside columns) — nothing force-blocked.
+- [x] Net: **5 block variants → 3** (`hero-banner`, `cards`, `columns`) + `form-contact`; parsers/template/import script updated; re-imported and verified.
+
 ### Phase 3 — Landing page reference (M3) — ✅ complete
 - [x] Build import infrastructure: `tools/importer/page-templates.json` (cit-landing), 5 parsers, 2 transformers (cleanup + sections), import script.
 - [x] Generate canonical `/cit` HTML with metadata via the import pipeline → `content/cit.plain.html` (all 6 blocks).

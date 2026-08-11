@@ -35,10 +35,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-cit-landing.js
-  var import_cit_landing_exports = {};
-  __export(import_cit_landing_exports, {
-    default: () => import_cit_landing_default
+  // tools/importer/import-financial-advisers.js
+  var import_financial_advisers_exports = {};
+  __export(import_financial_advisers_exports, {
+    default: () => import_financial_advisers_default
   });
 
   // tools/importer/parsers/hero-banner.js
@@ -532,7 +532,7 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-cit-landing.js
+  // tools/importer/import-financial-advisers.js
   var parsers = {
     "hero-banner": parse,
     cards: parse2,
@@ -540,10 +540,10 @@ var CustomImportScript = (() => {
     columns: parse4
   };
   var PAGE_TEMPLATE = {
-    name: "cit-landing",
-    description: "CIT landing page: hero-banner, definition default content, cards (feature), form-contact, columns (media + compare). Shared header nav and footer chrome.",
+    name: "financial-advisers",
+    description: 'CIT Financial Advisers page: hero-banner (H1 "Financial Advisers" + subhead "Stand out from your competitors"), intro/value-prop default content (TrueOpen Platform prose + "Attract new prospects" heading + process-flow diagram image, in the div[style*=27px] intro band), section-2 default content ("Satisfy the growing demand of customers." heading demoted from a second page <h1>, plus the "Our solution provides\u2026" value prop) above a genuine two-column solutions list rendered as a BASE columns block (LEFT: ModelTool(k)it, Unitized Managed Accounts, Collective Investment Trusts, Sales Enablement, Level Compensation & RIA Payment Services | RIGHT: Data Feeds, Mutual Fund Trading Platform, ETF Trading Platform, Trust and Custody). The solutions list has no is/is-not semantics (no .checks/.exes classes, no "are:"/"are not:" headings) so it emits Columns, NOT Columns (compare). Closing CTA columns (text-only, TALK TO US rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/broker-dealer parsers and transformers; adds no new blocks.',
     urls: [
-      "https://www.broadridge.com/cit/"
+      "https://www.broadridge.com/cit/financial-advisers"
     ],
     blocks: [
       {
@@ -554,24 +554,23 @@ var CustomImportScript = (() => {
         ]
       },
       {
-        name: "cards",
+        // Two columns instances:
+        //   1) the genuine two-column solutions list (`et_pb_section_2 > et_pb_row_4`)
+        //      -> base "Columns" (2 cells). Leaving the outer `et_pb_section_2`
+        //      untouched preserves it as the s3 wrapper (its row_2 heading +
+        //      value-prop stay as default content above the block).
+        //   2) the closing CTA inner `div.CTA-cover` -> single text-only column.
+        name: "columns",
         instances: [
-          "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
-          ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
+          "#main-content > section.CTA-line > div.CTA-cover",
+          "section.CTA-line div.CTA-cover"
         ]
       },
       {
         name: "form-contact",
         instances: [
           "#talk-to-us"
-        ]
-      },
-      {
-        name: "columns",
-        instances: [
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
-          "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
-          "#page-container > div.et_pb_section_3 > div.et_pb_row"
         ]
       }
     ],
@@ -582,31 +581,35 @@ var CustomImportScript = (() => {
         selector: ["#main-content > section.et_pb_fullwidth_header_0"],
         style: null,
         blocks: ["hero-banner"],
-        defaultContent: []
+        defaultContent: [],
+        hint: "block"
       },
       {
         id: "s2",
-        name: "Definition and Feature Cards",
-        selector: ["#main-content > div.et_pb_section_1.welcomeSection"],
-        style: "light-grey",
-        blocks: ["cards"],
-        defaultContent: [".welcomeSection .et_pb_row_0 .et_pb_text"]
+        name: "Intro and Value Prop",
+        selector: ['#main-content > div[style*="27px"]'],
+        style: null,
+        blocks: [],
+        defaultContent: ['#main-content > div[style*="27px"]'],
+        hint: "default-content"
       },
       {
         id: "s3",
-        name: "Characteristics",
+        name: "Solutions",
         selector: ["#main-content > div.et_pb_section_2"],
         style: "light-grey",
         blocks: ["columns"],
-        defaultContent: []
+        defaultContent: ["#main-content > div.et_pb_section_2 > div.et_pb_row_2 .et_pb_text_inner"],
+        hint: "block"
       },
       {
         id: "s4",
         name: "Closing CTA",
-        selector: ["#page-container > div.et_pb_section_3"],
-        style: "light-grey",
+        selector: ["#main-content > section.CTA-line"],
+        style: null,
         blocks: ["columns"],
-        defaultContent: []
+        defaultContent: [],
+        hint: "block"
       }
     ]
   };
@@ -648,7 +651,7 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_cit_landing_default = {
+  var import_financial_advisers_default = {
     transform: (payload) => {
       const {
         document: document2,
@@ -678,8 +681,9 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document2);
       WebImporter.rules.transformBackgroundImages(main, document2);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-      const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
-      const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
+      const pathname = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
+      const slug = pathname.split("/").filter(Boolean).pop() || "index";
+      const path = WebImporter.FileUtils.sanitizePath(`/${slug}`);
       return [{
         element: main,
         path,
@@ -691,5 +695,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_cit_landing_exports);
+  return __toCommonJS(import_financial_advisers_exports);
 })();
