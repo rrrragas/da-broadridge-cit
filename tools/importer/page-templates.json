@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "projectType": "da"
+  },
+  "templates": [
+    {
+      "name": "cit-landing",
+      "urls": [
+        "https://www.broadridge.com/cit/"
+      ],
+      "coverageGaps": [],
+      "description": "CIT landing page: hero-banner, definition default content, cards-feature (2 tiles), form-contact (Talk to Us modal), columns-media + columns-compare (characteristics), and columns-media (closing CTA). Shared header nav and footer chrome.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "cards-feature",
+          "instances": [
+            "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
+            ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        },
+        {
+          "name": "columns-media",
+          "instances": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
+            "#page-container > div.et_pb_section_3 > div.et_pb_row"
+          ]
+        },
+        {
+          "name": "columns-compare",
+          "instances": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_4"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "s2",
+          "name": "Definition and Feature Cards",
+          "selector": [
+            "#main-content > div.et_pb_section_1.welcomeSection"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "cards-feature"
+          ],
+          "defaultContent": [
+            ".welcomeSection .et_pb_row_0 .et_pb_text"
+          ]
+        },
+        {
+          "id": "s3",
+          "name": "Characteristics",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "columns-media",
+            "columns-compare"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#page-container > div.et_pb_section_3"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "columns-media"
+          ],
+          "defaultContent": []
+        }
+      ]
+    }
+  ]
+}

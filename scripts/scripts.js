@@ -9,6 +9,8 @@ import {
   loadSection,
   loadSections,
   loadCSS,
+  readBlockConfig,
+  toClassName,
 } from './aem.js';
 
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -117,6 +119,62 @@ function decorateButtons(main) {
 }
 
 /**
+ * camelCase helper for section-metadata dataset keys.
+ * @param {string} name
+ */
+function toCamelCaseKey(name) {
+  return toClassName(name).replace(/-([a-z])/g, (m, c) => c.toUpperCase());
+}
+
+/**
+ * Applies section-metadata blocks to their section as classes/styles, then
+ * removes the block. This repo's slim `aem.js` `decorateSections` does not
+ * process `section-metadata`, so it is handled here (matching the boilerplate).
+ * @param {Element} main The main element
+ */
+function decorateSectionMetadata(main) {
+  main.querySelectorAll(':scope > .section > div > .section-metadata').forEach((metaBlock) => {
+    const section = metaBlock.closest('.section');
+    const meta = readBlockConfig(metaBlock);
+    Object.keys(meta).forEach((key) => {
+      if (key === 'style') {
+        const styles = meta.style
+          .split(',')
+          .map((style) => toClassName(style.trim()))
+          .filter((style) => style);
+        styles.forEach((style) => section.classList.add(style));
+      } else {
+        section.dataset[toCamelCaseKey(key)] = meta[key];
+      }
+    });
+    metaBlock.closest('.section-metadata-wrapper')?.remove();
+    metaBlock.remove();
+  });
+}
+
+/**
+ * Consumes a page-level `metadata` block (Title/Description/Image/...) into the
+ * document head and removes it. On the deployed pipeline this is done server
+ * side; when serving `.plain.html` locally the block otherwise renders as
+ * content and 404s trying to load a non-existent `metadata` block. Idempotent.
+ * @param {Element} main The main element
+ */
+function decoratePageMetadata(main) {
+  const metaBlock = main.querySelector(':scope > .section > div > .metadata');
+  if (!metaBlock) return;
+  const meta = readBlockConfig(metaBlock);
+  if (meta.title && !document.title) document.title = meta.title;
+  if (meta.description && !document.querySelector('meta[name="description"]')) {
+    const m = document.createElement('meta');
+    m.setAttribute('name', 'description');
+    m.setAttribute('content', meta.description);
+    document.head.append(m);
+  }
+  metaBlock.closest('.metadata-wrapper')?.remove();
+  metaBlock.remove();
+}
+
+/**
  * Decorates the main element.
  * @param {Element} main The main element
  */
@@ -125,6 +183,8 @@ export function decorateMain(main) {
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSections(main);
+  decorateSectionMetadata(main);
+  decoratePageMetadata(main);
   decorateBlocks(main);
   decorateButtons(main);
 }
