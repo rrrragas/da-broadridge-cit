@@ -9,8 +9,8 @@
     "fullpage": true,
     "block": true
   },
-  "regressionBase": "https://main--da-broadridge-cit--rrrragas.aem.live",
-  "parityBase": "https://www.broadridge.com/cit/",
+  "regressionBase": "https://main--da-broadridge-cit--rrrragas.aem.page",
+  "parityBase": "https://www.broadridge.com",
   "localCandidate": "http://localhost:3000",
   "threshold": 0.001,
   "viewports": ["mobile", "tablet", "desktop"]
