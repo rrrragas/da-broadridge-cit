@@ -10,7 +10,7 @@
     "block": true
   },
   "regressionBase": "https://main--da-broadridge-cit--rrrragas.aem.live",
-  "parityBase": "",
+  "parityBase": "https://www.broadridge.com/cit/",
   "localCandidate": "http://localhost:3000",
   "threshold": 0.001,
   "viewports": ["mobile", "tablet", "desktop"]

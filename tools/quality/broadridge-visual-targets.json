@@ -1,3 +1,6 @@
 [
-  { "path": "/", "viewports": ["mobile", "tablet", "desktop"] }
+  { "path": "/", 
+    "block": "hero-banner",
+    "baseSelector": ".et_pb_fullwidth_header",
+    "viewports": ["mobile", "tablet", "desktop"] }
 ]
