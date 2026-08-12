@@ -16,5 +16,26 @@ export default async function decorate(block) {
   const footer = document.createElement('div');
   while (fragment.firstElementChild) footer.append(fragment.firstElementChild);
 
+  // Group each heading + its following list into a link-group so the groups
+  // can sit side by side. The content round-trips as flat siblings
+  // (h3, ul, h3, ul) inside one default-content-wrapper, so we re-wrap here.
+  footer.querySelectorAll('.default-content-wrapper').forEach((wrapper) => {
+    const hasGroups = wrapper.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6')
+      && wrapper.querySelector(':scope > ul, :scope > ol');
+    if (!hasGroups) return;
+    wrapper.classList.add('footer-nav');
+    let group = null;
+    [...wrapper.children].forEach((el) => {
+      if (/^H[1-6]$/.test(el.tagName)) {
+        group = document.createElement('div');
+        group.className = 'footer-link-group';
+        wrapper.insertBefore(group, el);
+        group.append(el);
+      } else if (group) {
+        group.append(el);
+      }
+    });
+  });
+
   block.append(footer);
 }

@@ -54,11 +54,16 @@ footer .footer img.icon {
   height: 24px;
 }
 
+/* link-group columns (wrapped by footer.js decorator) */
 @media (width >= 600px) {
-  footer .footer > div > div:has(ul) {
+  footer .footer .footer-nav {
     display: flex;
     flex-wrap: wrap;
     gap: 48px;
+  }
+
+  footer .footer .footer-link-group {
+    flex: 0 1 auto;
   }
 }
 
