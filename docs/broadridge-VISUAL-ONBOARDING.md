@@ -52,7 +52,7 @@ differs. Add pages as they migrate:
 
 ### How to invoke
 - **With Claude Code:** ask for a skill — "run a block-level visual check of the hero on my branch" → it loads
-  `broadridge-visual-fullpage` or `broadridge-visual-block` and runs the command.
+  the `broadridge-visual` skill and runs the command.
 - **Raw command:** run the npm script. Because the config supplies the URLs, you pass only a few flags.
 
 ```bash
@@ -159,5 +159,5 @@ One line per changed page:
 
 ## Related
 - [broadridge-VISUAL-TESTING.md](broadridge-VISUAL-TESTING.md) — the reference (config, workflows, modes).
-- Skills: `broadridge-visual-fullpage`, `broadridge-visual-block`.
+- Skill: `broadridge-visual`.
 - [broadridge-pr-readiness](../.claude/skills/broadridge-pr-readiness/SKILL.md) — the PR definition of done.

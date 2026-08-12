@@ -59,8 +59,7 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `.claude/skills/broadridge-block-review/SKILL.md` | Pre-PR block self-review checklist. | **The Skill tool.** At session start the harness registers only `name`+`description`; the **full body loads when invoked** — description match ("modified an EDS block"), a user typing `/broadridge-block-review`, or the model choosing it. |
 | `.claude/skills/broadridge-pr-readiness/SKILL.md` | Definition of done before a PR. | Same. Loads when preparing a PR. |
 | `.claude/skills/broadridge-i18n-rtl/SKILL.md` | Placeholders/`Intl`/RTL guidance. | Same. Loads when code touches user-facing text or locales. |
-| `.claude/skills/broadridge-visual-fullpage/SKILL.md` | Run a full-page visual comparison (regression or parity) locally. | Same. Loads when doing a whole-page visual check. |
-| `.claude/skills/broadridge-visual-block/SKILL.md` | Run a block/section-level visual comparison (`block=`/`selector=`). | Same. Loads when doing a block-level visual check. |
+| `.claude/skills/broadridge-visual/SKILL.md` | Run visual comparison — full-page or block, regression or parity — locally (`broadridge:visual:all` or per-combo). | Same. Loads when doing a visual check. |
 | `.agents/skills/broadridge-*/SKILL.md` (3 mirrors) | Byte-identical copies. | Read by **other agent tooling that consumes `.agents/`** (the repo already maintained this twin tree). Kept in sync. |
 
 ## 4. Harness & tooling config

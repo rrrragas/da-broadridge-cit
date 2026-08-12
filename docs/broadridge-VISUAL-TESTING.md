@@ -128,7 +128,7 @@ regression+fullpage) once its baseline is clean, split that combo out or gate it
 vs EDS is a visual reference, not a threshold gate).
 
 ### Locally — two skills
-Use **`broadridge-visual-fullpage`** or **`broadridge-visual-block`**. With the config supplying base/candidate,
+Use the **`broadridge-visual`** skill (or `npm run broadridge:visual:all`). With the config supplying base/candidate,
 the commands are short:
 ```bash
 # full page, regression (base=main live, candidate=localhost from config)
