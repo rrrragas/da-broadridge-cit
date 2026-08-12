@@ -197,12 +197,12 @@ Three verification passes were run. The prior artifact had two material errors a
 - [x] Verify internal linking: **all 23 matrix-cits tile links resolve to imported fund pages** (0 missing); social/external links kept absolute.
 - [ ] Image optimization/local hosting handled at DA publish time (source URLs preserved for now).
 
-### Phase 6 — QA, performance & delivery (M6)
-- [ ] Verify heading hierarchy, ARIA, alt text, WCAG 2.1 AA across all pages.
-- [ ] Run `npm run lint` / `lint:fix` — clean.
-- [ ] Run Lighthouse/PageSpeed on feature-preview URL; tune toward 100.
-- [ ] Push branch; verify Code Sync, lint, perf via `gh pr checks`.
-- [ ] Open PR to `main` with feature-preview links for `/cit/` and representative sibling + fund pages.
+### Phase 6 — QA, performance & delivery (M6) — 🔄 in progress
+- [x] Verify heading hierarchy, ARIA, alt text across all 32 pages (static QA sweep): **0 heading skips, exactly 1 h1/page, all content images have alt, no javascript:/empty links.** Fixed a systematic Divi heading-skip issue (h1→h3/h5 visual sizing) via a stack-based heading-hierarchy normalizer in the shared cleanup transformer; re-imported all pages.
+- [x] Run `npm run lint` — clean (JS + CSS).
+- [x] Push branch; **AEM Code Sync built the feature preview** — code assets (scripts/blocks) serve 200, and `/cit` + `/matrix-cits` render the fully migrated content with real Matrix Trust chrome. Preview: `https://migrate-cit-section--da-broadridge-cit--rrrragas.aem.page/cit`.
+- [ ] Run Lighthouse/PageSpeed on the feature-preview URL; tune toward 100. *(pending)*
+- [ ] Open PR to `main` with feature-preview links. *(`gh` CLI unavailable in this env — PR description prepared below for manual open, or enable `gh`.)*
 
 ## Open Questions / Follow-ups
 - **Fund-page template variance** — resolved after building the 2–3 samples; may adjust Group C.
