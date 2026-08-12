@@ -26,6 +26,10 @@
   --brand-check: #2e8b57; /* "CITs are" green check */
   --brand-cross: #c0392b; /* "CITs are not" red X */
 
+  /* neutral borders */
+  --border-color: #dadada; /* default hairline (cards, footer dividers) */
+  --border-color-strong: #999; /* form field outlines */
+
   /* fonts — brand uses proprietary FreightSans; use a humanist sans fallback stack */
   --body-font-family: freightsans, freightsans-fallback, helvetica, arial, sans-serif;
   --heading-font-family: var(--body-font-family);

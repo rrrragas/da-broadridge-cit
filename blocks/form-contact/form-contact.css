@@ -33,7 +33,7 @@
 .form-contact .form-contact-field textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #999;
+  border: 1px solid var(--border-color-strong);
   border-radius: 4px;
   font: inherit;
   box-sizing: border-box;
@@ -68,7 +68,7 @@
 .form-contact .form-contact-support {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--border-color);
 }
 
 .form-contact .form-contact-support p {

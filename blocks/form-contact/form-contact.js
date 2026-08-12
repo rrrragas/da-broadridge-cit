@@ -36,10 +36,12 @@ function readConfig(block) {
         config[key] = valueCell.textContent.trim();
       }
     } else if (cells.length === 1 && cells[0].textContent.trim()) {
-      intro.push(cells[0].innerHTML);
+      // keep the authored cell element so its nodes can be moved (no innerHTML round-trip)
+      intro.push(cells[0]);
     }
   });
-  config.intro = config.intro || intro.join('');
+  // config.intro is an array of source cell elements (authored rich text)
+  config.intro = config.introCells || intro;
   return config;
 }
 
@@ -68,11 +70,14 @@ export default function decorate(block) {
     h.textContent = config.heading;
     wrap.append(h);
   }
-  if (config.intro) {
-    const p = document.createElement('div');
-    p.className = 'form-contact-intro';
-    p.innerHTML = config.intro;
-    wrap.append(p);
+  if (config.intro && config.intro.length) {
+    const introEl = document.createElement('div');
+    introEl.className = 'form-contact-intro';
+    // move the authored intro nodes across (preserves rich text without innerHTML)
+    config.intro.forEach((cell) => {
+      while (cell.firstChild) introEl.append(cell.firstChild);
+    });
+    wrap.append(introEl);
   }
 
   const form = document.createElement('form');
@@ -114,7 +119,9 @@ export default function decorate(block) {
   const success = document.createElement('div');
   success.className = 'form-contact-success';
   success.hidden = true;
-  success.innerHTML = `<h2>${config.success || 'Thank You'}</h2>`;
+  const successHeading = document.createElement('h2');
+  successHeading.textContent = config.success || 'Thank You';
+  success.append(successHeading);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
