@@ -215,7 +215,8 @@ redirect map, **visual-diff**), `npm run broadridge:test:unit`, and axe-core a11
 **Project docs:** [broadridge-EDS-RULES.md](docs/broadridge-EDS-RULES.md) · [broadridge-BLOCKS.md](docs/broadridge-BLOCKS.md) ·
 [broadridge-SECURITY-HEADERS.md](docs/broadridge-SECURITY-HEADERS.md) · [broadridge-SEO-METADATA.md](docs/broadridge-SEO-METADATA.md) ·
 [broadridge-MIGRATION-RUNBOOK.md](docs/broadridge-MIGRATION-RUNBOOK.md) · [broadridge-AI-CONTRACT.md](docs/broadridge-AI-CONTRACT.md) ·
-[broadridge-VISUAL-TESTING.md](docs/broadridge-VISUAL-TESTING.md) · [broadridge-INVENTORY.md](docs/broadridge-INVENTORY.md).
+[broadridge-VISUAL-TESTING.md](docs/broadridge-VISUAL-TESTING.md) · [broadridge-VISUAL-ONBOARDING.md](docs/broadridge-VISUAL-ONBOARDING.md) ·
+[broadridge-INVENTORY.md](docs/broadridge-INVENTORY.md).
 
 ## Security Considerations
 

@@ -48,7 +48,8 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `docs/broadridge-SEO-METADATA.md` | Metadata schema, canonical, hreflang, JSON-LD. | Pull. Used during authoring/migration. |
 | `docs/broadridge-MIGRATION-RUNBOOK.md` | 6-phase migration process + rollback. | Pull. Used by whoever runs the migration. |
 | `docs/broadridge-AI-CONTRACT.md` | Hard constraints + required workflow for AI tools. | Pull, but **pointed at from AGENTS.md**, so an AI is directed to `Read` it at task start. |
-| `docs/broadridge-VISUAL-TESTING.md` | Visual-regression model, local + CI usage, reading diffs, extending the manifest. | Pull. Linked from the block-review skill + visual CI. |
+| `docs/broadridge-VISUAL-TESTING.md` | Visual-regression model, config, workflows, reading diffs. | Pull. Linked from the block-review skill + visual CI. |
+| `docs/broadridge-VISUAL-ONBOARDING.md` | Junior-dev walkthrough: how to invoke, inputs, step-by-step, output (local + CI). | Pull. New-dev onboarding. |
 | `docs/broadridge-INVENTORY.md` | This document. | Pull. |
 
 ## 3. Skills (trigger-loaded)
@@ -85,6 +86,7 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `tools/quality/broadridge-visual-check.mjs` | Playwright + pixelmatch visual diff (mobile/tablet/desktop); writes before/after/diff PNGs. Per-target full-URL base/candidate overrides; skips 404 targets. | `broadridge:test:visual` → **dev locally + the two visual PR workflows**. |
 | `tools/quality/broadridge-visual-parse-pr.mjs` | Parses the `visual:start` block in a PR description into a per-mode manifest (regression uses `before=`, parity uses `live=`). | Run inside the visual workflows. |
 | `tools/quality/broadridge-visual-targets.json` | Default manifest (paths + viewports) for regression fallback when the PR lists no URLs. | Read by `broadridge-visual-check.mjs`. |
+| `tools/quality/broadridge-visual.config.json` | Project defaults (regressionBase, parityBase, localCandidate, threshold, viewports) so CLI runs need only `--scope`/`--path`/`--block`. | Read by `broadridge-visual-check.mjs`. |
 | `test/broadridge-utils.test.js` | 7 unit tests for `isSafeUrl`/`formatCurrency`. | **Vitest**, via `broadridge:test:unit` → dev + CI push build. |
 | `scripts/broadridge-utils.js` | Runtime helpers (`isSafeUrl`, `formatCurrency`) for blocks. Example: `import { isSafeUrl } from '../../scripts/broadridge-utils.js'`. | **The browser**, at page load, when a block that imports it runs. No block imports it yet — it's a provided, tested helper. |
 

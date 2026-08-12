@@ -44,11 +44,18 @@ function arg(name, fallback) {
 }
 const hasFlag = (name) => process.argv.includes(`--${name}`);
 
-const base = arg('base');
-const candidate = arg('candidate');
+// Project defaults live in a config file so day-to-day you only pass --scope / --path / --block.
+// Any --flag overrides the config; a manifest target may override per page.
+const configPath = arg('config', 'tools/quality/broadridge-visual.config.json');
+let config = {};
+try { config = JSON.parse(readFileSync(configPath, 'utf8')); } catch { /* config is optional */ }
+
+const mode = arg('mode', 'regression'); // 'regression' → config.regressionBase | 'parity' → config.parityBase
+const base = arg('base') || (mode === 'parity' ? config.parityBase : config.regressionBase) || null;
+const candidate = arg('candidate') || config.localCandidate || null;
 const manifestPath = arg('manifest', 'tools/quality/broadridge-visual-targets.json');
 const outDir = arg('out', 'tools/quality/visual-output');
-const threshold = parseFloat(arg('threshold', '0.001'));
+const threshold = arg('threshold') ? parseFloat(arg('threshold')) : (typeof config.threshold === 'number' ? config.threshold : 0.001);
 const onlyPath = arg('path');
 const reportOnly = hasFlag('report-only');
 const scope = arg('scope', 'fullpage'); // 'fullpage' (whole page) or 'block' (a single element)
@@ -56,9 +63,8 @@ const cliBlock = arg('block'); // block-scope default: EDS block name → `.name
 const cliSelector = arg('selector'); // block-scope default: raw CSS selector
 const cliBaseSelector = arg('base-selector'); // block-scope: selector for the base side only (legacy markup)
 
-// --base/--candidate are default origins prepended to each target's `path`. A manifest target may
-// instead carry its own full `base`/`candidate` URLs (migration parity / PR-supplied URLs), in which
-// case the origins are optional. Targets that resolve to neither are skipped below.
+// base/candidate above come from --flag, else the config (by mode), else null. A manifest target may
+// still carry its own full `base`/`candidate` URLs (PR-supplied). Targets that resolve to neither are skipped.
 
 const VIEWPORTS = {
   mobile: { width: 375, height: 667 },
@@ -130,7 +136,8 @@ const rows = [];
 const browser = await chromium.launch();
 try {
   for (const target of manifest) {
-    const vps = (target.viewports && target.viewports.length ? target.viewports : Object.keys(VIEWPORTS));
+    const cfgVps = Array.isArray(config.viewports) && config.viewports.length ? config.viewports : Object.keys(VIEWPORTS);
+    const vps = (target.viewports && target.viewports.length ? target.viewports : cfgVps);
     for (const vpName of vps) {
       const vp = VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }

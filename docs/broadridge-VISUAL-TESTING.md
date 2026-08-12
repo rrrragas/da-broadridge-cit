@@ -21,13 +21,21 @@ comparing against `main` would just 404 and skip. Point BASE at the legacy site 
 > pixel-diff **%** will usually be high even when they look alike. In this mode treat the **before/after images
 > as a side-by-side visual reference**, not a pass/fail threshold — which is another reason it stays report-only.
 
-### Setting the source site
+### Config — set the defaults once
 
-- **CI (all PRs):** set a repo **variable** `VISUAL_BASE_URL` (Settings → Secrets and variables → Actions →
-  Variables) to the legacy site origin, e.g. `https://www.legacy-cit-site.com`. The workflow uses it as BASE.
-- **CI (one-off):** run the workflow manually (Actions → Visual regression → *Run workflow*) and pass `base`
-  (and optionally `candidate`) inputs.
-- **Locally:** pass `--base https://www.legacy-cit-site.com`.
+Project defaults live in `tools/quality/broadridge-visual.config.json`, so you rarely pass URLs on the CLI:
+
+| Key | Used for |
+|---|---|
+| `regressionBase` | BEFORE for regression (EDS `main` live) |
+| `parityBase` | BEFORE for migration parity (the legacy/source site) — **fill this in** |
+| `localCandidate` | AFTER for local runs (`http://localhost:3000`) |
+| `threshold`, `viewports` | diff sensitivity + which sizes to capture |
+
+- **Locally:** the tool reads the config, so `--mode regression` uses `regressionBase` and `--mode parity` uses
+  `parityBase` automatically. Any `--flag` overrides the config.
+- **In CI:** the matrix builds BEFORE/AFTER from the PR description's `before=`/`live=`/`after=` URLs (per page);
+  regression+fullpage falls back to `main` live vs the branch preview. `threshold`/`viewports` come from the config.
 
 ### Per-page overrides (when legacy paths differ)
 
@@ -103,12 +111,15 @@ regression+fullpage) once its baseline is clean, split that combo out or gate it
 vs EDS is a visual reference, not a threshold gate).
 
 ### Locally — two skills
-Use **`broadridge-visual-fullpage`** or **`broadridge-visual-block`**; both wrap the same CLI:
+Use **`broadridge-visual-fullpage`** or **`broadridge-visual-block`**. With the config supplying base/candidate,
+the commands are short:
 ```bash
-# full page, regression
-npm run broadridge:test:visual -- --scope fullpage --base <before> --candidate http://localhost:3000 --path /cit
+# full page, regression (base=main live, candidate=localhost from config)
+npm run broadridge:test:visual -- --scope fullpage --path /cit
 # one block, regression
-npm run broadridge:test:visual -- --scope block --block hero-banner --base <before> --candidate http://localhost:3000 --path /cit
+npm run broadridge:test:visual -- --scope block --block hero-banner --path /cit
+# migration parity (base=config.parityBase)
+npm run broadridge:test:visual -- --mode parity --scope block --block hero-banner --base-selector ".legacy-hero" --path /cit
 ```
 
 ## Reading a result

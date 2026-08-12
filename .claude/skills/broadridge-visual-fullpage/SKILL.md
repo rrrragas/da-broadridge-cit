@@ -17,18 +17,19 @@ PNGs to `tools/quality/visual-output/`. Full reference: [broadridge-VISUAL-TESTI
 
 ## Run it (dev server up: `aem up`; once: `npx playwright install chromium`)
 
-```bash
-# Regression — main live vs local branch
-npm run broadridge:test:visual -- --scope fullpage \
-  --base https://main--da-broadridge-cit--rrrragas.aem.live --candidate http://localhost:3000 --path /cit
+Base/candidate/threshold/viewports come from `tools/quality/broadridge-visual.config.json`, so you usually pass
+only `--scope`/`--path`:
 
-# Migration parity — legacy page vs local branch
-npm run broadridge:test:visual -- --scope fullpage \
-  --base https://www.legacy-cit-site.com/cit --candidate http://localhost:3000/cit
+```bash
+# Regression (default mode) — base=main live, candidate=localhost from the config
+npm run broadridge:test:visual -- --scope fullpage --path /cit
+
+# Migration parity — base=config.parityBase (the legacy site); set it once in the config
+npm run broadridge:test:visual -- --mode parity --scope fullpage --path /cit
 ```
 
-`--scope fullpage` is the default. Add `--path /one/page` to limit to a manifest entry, or point `--base`/`--candidate`
-at any URLs. Open the `*-diff.png` files; changed pixels are highlighted.
+Any `--flag` overrides the config (e.g. `--base <url>`, `--candidate <url>`, `--threshold 0.005`). `--scope
+fullpage` is the default. Open the `*-diff.png` files; changed pixels are highlighted.
 
 ## Reading it
 - **ok** — diff ≤ threshold (default 0.1%). **CHANGED** — over threshold; open the diff and confirm intent.

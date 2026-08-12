@@ -20,18 +20,18 @@ pinpoints the block you changed. Full reference: [broadridge-VISUAL-TESTING.md](
 
 ## Run it (dev server up: `aem up`; once: `npx playwright install chromium`)
 
-```bash
-# Regression — hero block: main live vs local branch
-npm run broadridge:test:visual -- --scope block --block hero-banner \
-  --base https://main--da-broadridge-cit--rrrragas.aem.live --candidate http://localhost:3000 --path /cit
+Base/candidate come from `tools/quality/broadridge-visual.config.json`, so you pass `--scope block` + the block:
 
-# Migration parity — hero block vs legacy element
-npm run broadridge:test:visual -- --scope block --block hero-banner --base-selector ".legacy-hero" \
-  --base https://www.legacy-cit-site.com/cit --candidate http://localhost:3000/cit
+```bash
+# Regression — hero block (base=main live, candidate=localhost from config)
+npm run broadridge:test:visual -- --scope block --block hero-banner --path /cit
+
+# Migration parity — hero vs legacy element (needs a legacy selector for the before side)
+npm run broadridge:test:visual -- --mode parity --scope block --block hero-banner --base-selector ".legacy-hero" --path /cit
 ```
 
 Diff PNGs land in `tools/quality/visual-output/`. A target with no block/selector is **skipped** ("block scope
-needs block= or selector=").
+needs block= or selector="). Override anything with a `--flag` (e.g. `--selector`, `--base`).
 
 ## In CI
 The `broadridge-visual.yaml` matrix runs the `block` scope from `block=`/`selector=` fields in the PR description's
