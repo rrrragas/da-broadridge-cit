@@ -18,7 +18,9 @@ structure changes, `building-blocks` while implementing, and `code-review` for t
 1. Read the changed `blocks/<name>/<name>.js` and `.css`.
 2. Walk every section below; fix violations before committing.
 3. Run the machine checks: `npm run lint && npm run broadridge:check`.
-4. Then run the `broadridge-pr-readiness` skill for the PR itself.
+4. With the dev server up (`aem up`), run the visual diff and eyeball `tools/quality/visual-output/*-diff.png`:
+   `npm run broadridge:test:visual -- --base https://main--da-broadridge-cit--rrrragas.aem.live --candidate http://localhost:3000`
+5. Then run the `broadridge-pr-readiness` skill for the PR itself.
 
 ## Content model (author-facing structure)
 
@@ -76,6 +78,8 @@ structure changes, `building-blocks` while implementing, and `code-review` for t
       `/widgets/{path}/{name}.{html,css,js}` via `window.hlx.codeBasePath` + `loadCSS`), rather than inventing
       a new external-loading mechanism.
 - [ ] If the codebase serves multiple brands, the block was checked against each brand's tokens/theme.
+- [ ] Ran the visual diff (`broadridge:test:visual`) for a page using this block; any `CHANGED` result is
+      intentional and noted for the PR.
 
 ## Related skills
 

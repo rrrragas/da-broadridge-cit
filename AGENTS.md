@@ -203,14 +203,14 @@ must remember.* Before opening a PR, run the `broadridge-block-review` and `broa
   with camelCase keys, `Intl` for formatting, logical properties for RTL.
 
 **Enforcement:** `npm run lint`, `npm run broadridge:check` (breakpoints, SVG size, color tokens, security,
-redirect map), `npm run broadridge:test:unit`, and axe-core a11y in CI, plus the PR template.
+redirect map), `npm run broadridge:test:unit`, axe-core a11y and visual-regression diffs in CI, plus the PR template.
 
 **AI tools:** read [docs/broadridge-AI-CONTRACT.md](docs/broadridge-AI-CONTRACT.md) before starting.
 
 **Project docs:** [broadridge-EDS-RULES.md](docs/broadridge-EDS-RULES.md) · [broadridge-BLOCKS.md](docs/broadridge-BLOCKS.md) ·
 [broadridge-SECURITY-HEADERS.md](docs/broadridge-SECURITY-HEADERS.md) · [broadridge-SEO-METADATA.md](docs/broadridge-SEO-METADATA.md) ·
 [broadridge-MIGRATION-RUNBOOK.md](docs/broadridge-MIGRATION-RUNBOOK.md) · [broadridge-AI-CONTRACT.md](docs/broadridge-AI-CONTRACT.md) ·
-[broadridge-INVENTORY.md](docs/broadridge-INVENTORY.md).
+[broadridge-VISUAL-TESTING.md](docs/broadridge-VISUAL-TESTING.md) · [broadridge-INVENTORY.md](docs/broadridge-INVENTORY.md).
 
 ## Security Considerations
 

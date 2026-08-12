@@ -75,6 +75,8 @@ remember.** Where a `[review-only]` rule proves important and checkable, promote
 - **Lighthouse:** target 100, **≥90 mandatory** on every page. Be honest with stakeholders: heavy MarTech
   (Adobe Launch/Alloy/consent) makes a perfect 100 unrealistic — use the `aem-martech` plugin patterns and
   treat the gap as a documented business tradeoff, not a bug. `[enforced-by: lighthouse/PSI CI]`
+- **Visual regression:** block/page changes are diffed against production/live at mobile/tablet/desktop; review
+  the diff and confirm any change is intentional. See [broadridge-VISUAL-TESTING.md](broadridge-VISUAL-TESTING.md). `[enforced-by: visual CI (report-only)]`
 
 ## 6. SEO
 

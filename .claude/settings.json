@@ -7,6 +7,7 @@
       "Bash(npm run broadridge:check:breakpoints)",
       "Bash(npm run broadridge:check:svg)",
       "Bash(npm run broadridge:check:colors)",
+      "Bash(npm run broadridge:test:visual)",
       "Bash(node tools/quality/*)",
       "Bash(git status)",
       "Bash(git diff:*)",

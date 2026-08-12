@@ -15,7 +15,8 @@
     "broadridge:check:redirects": "node tools/quality/broadridge-redirect-map-check.mjs",
     "broadridge:check": "npm run broadridge:check:breakpoints && npm run broadridge:check:svg && npm run broadridge:check:colors && npm run broadridge:check:security && npm run broadridge:check:redirects",
     "broadridge:test:unit": "vitest run",
-    "broadridge:test:a11y": "node tools/quality/broadridge-a11y-check.mjs"
+    "broadridge:test:a11y": "node tools/quality/broadridge-a11y-check.mjs",
+    "broadridge:test:visual": "node tools/quality/broadridge-visual-check.mjs"
   },
   "repository": {
     "type": "git",
@@ -33,7 +34,9 @@
     "eslint": "8.57.1",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.32.0",
+    "pixelmatch": "^7.2.0",
     "playwright": "^1.62.1",
+    "pngjs": "^7.0.0",
     "stylelint": "17.14.1",
     "stylelint-config-standard": "40.0.0",
     "vitest": "^4.1.10"

@@ -1,0 +1,57 @@
+name: Visual regression
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'blocks/**'
+      - 'scripts/**'
+      - 'styles/**'
+      - 'head.html'
+      - 'tools/quality/broadridge-visual-check.mjs'
+      - 'tools/quality/broadridge-visual-targets.json'
+
+# Diffs production/live (before) vs the branch preview (after) for the manifest paths, at
+# mobile/tablet/desktop. See docs/broadridge-VISUAL-TESTING.md.
+# No baseline PNGs are committed — both sides render in the same CI browser (no font/AA mismatch).
+#
+# REPORT-ONLY for sprint one: `continue-on-error` keeps diffs from failing the PR. Remove those lines
+# (and drop `--report-only`) to make it blocking once the baseline is stable.
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for branch preview
+        continue-on-error: true
+        env:
+          PREVIEW: https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page/
+        run: |
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW" || true)
+            echo "attempt $i: $PREVIEW -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "Preview not ready after retries" && exit 1
+      - name: Run visual diff (report-only)
+        continue-on-error: true
+        env:
+          BASE: https://main--da-broadridge-cit--${{ github.repository_owner }}.aem.live
+          CANDIDATE: https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page
+        run: |
+          npm run broadridge:test:visual -- --base "$BASE" --candidate "$CANDIDATE" --report-only
+          cat tools/quality/visual-output/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Upload diff images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff
+          path: tools/quality/visual-output/
+          if-no-files-found: ignore

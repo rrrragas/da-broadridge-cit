@@ -22,6 +22,8 @@ The gate every change passes before it can merge. Rules and sources are in
 - [ ] `npm run lint` — ESLint + Stylelint clean.
 - [ ] `npm run broadridge:check` — breakpoints (600/900/1200), SVG size budget, color-token advisory.
 - [ ] `npm run broadridge:test:a11y` — axe-core has no violations on the changed pages.
+- [ ] `npm run broadridge:test:visual` — visual diff vs production reviewed for block/page changes; any
+      `CHANGED` result is intentional (see [broadridge-VISUAL-TESTING.md](../../../docs/broadridge-VISUAL-TESTING.md)).
 
 ## PR description (required — a PR without these is rejected)
 
