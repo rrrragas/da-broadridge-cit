@@ -16,6 +16,32 @@ export default async function decorate(block) {
   const footer = document.createElement('div');
   while (fragment.firstElementChild) footer.append(fragment.firstElementChild);
 
+  // Neutralize legal placeholder links. The source's legal links had no real
+  // destinations (javascript:void(0)); the migrated content stores href="#",
+  // which the delivery pipeline rewrites to "/". A "/" would misleadingly jump
+  // to the homepage, so convert these known-placeholder legal links into
+  // non-navigating placeholders (kept as links visually, but inert + flagged
+  // for assistive tech) until real destinations are supplied.
+  const LEGAL_LABELS = new Set([
+    'terms of use & linking policy',
+    'accessibility statement',
+    'legal statements',
+    'privacy statement',
+    'do not sell my personal information',
+    'your privacy choices',
+  ]);
+  footer.querySelectorAll('a').forEach((a) => {
+    const label = a.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
+    const href = a.getAttribute('href') || '';
+    // only the known legal labels whose href is a placeholder (#, /, or empty)
+    if (LEGAL_LABELS.has(label) && (href === '#' || href === '/' || href === '')) {
+      a.removeAttribute('href');
+      a.setAttribute('role', 'link');
+      a.setAttribute('aria-disabled', 'true');
+      a.classList.add('footer-legal-placeholder');
+    }
+  });
+
   // Group each heading + its following list into a link-group so the groups
   // can sit side by side. The content round-trips as flat siblings
   // (h3, ul, h3, ul) inside one default-content-wrapper, so we re-wrap here.
