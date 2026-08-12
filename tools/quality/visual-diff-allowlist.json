@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "purpose": "Accepted, intentional deviations from source-baseline.json. The visual-diff hook suppresses drift matching these entries so real regressions aren't lost in noise.",
+    "matching": "Each entry names a block, a property path (dot notation), and why. The hook skips a drift when block+property matches an entry (value patterns optional)."
+  },
+  "allow": [
+    {
+      "block": "*",
+      "property": "fontFamily",
+      "reason": "Brand uses proprietary FreightSans (freightsans_pro*). No licensed webfont is committed; migrated stack is freightsans, freightsans-fallback, helvetica, arial. Family-name mismatch is expected everywhere."
+    },
+    {
+      "block": "hero-banner",
+      "property": "h1.fontWeight",
+      "reason": "Source H1 is FreightSans Prolight weight 200; the fallback stack renders the light heading token at weight 300. Cosmetic, font-substitution artifact."
+    },
+    {
+      "block": "hero-banner",
+      "property": "h1.letterSpacing",
+      "reason": "Source applies -1.5px tracking tied to the proprietary font's metrics; not replicated on the fallback to avoid over-tightening a different typeface."
+    },
+    {
+      "block": "cards",
+      "property": "title.lineHeight",
+      "reason": "Line-height derives from the substituted font metrics; content and size match."
+    },
+    {
+      "block": "columns",
+      "property": "compareHeading.lineHeight",
+      "reason": "Font-metric-derived line-height; heading size/weight/color match."
+    },
+    {
+      "block": "form-contact",
+      "property": "submitBtn.padding",
+      "reason": "Migrated button uses the global button padding token (0.75em 1.6em) rather than the source's fixed 15px 27px. Same visual weight; keeps buttons consistent site-wide."
+    },
+    {
+      "block": "sections",
+      "property": "*.backgroundColor",
+      "reason": "Source alternates two near-identical light greys (#ebeef2 / #f0f2f6); migration uses one --light-color (#f4f6f8) for all bands. Visually equivalent, intentionally simplified."
+    },
+    {
+      "block": "footer",
+      "property": "heading.lineHeight",
+      "reason": "Font-metric-derived; heading size/weight/color match."
+    }
+  ],
+  "structural": {
+    "_note": "Non-style intentional differences (documented for the pre-PR full critique, not the per-property hook):",
+    "items": [
+      "Talk to Us form is an inline block placed as the last page section; source renders it as a modal triggered by TALK TO US.",
+      "Header nav and footer are rebuilt EDS chrome (nav/footer documents), not a DOM copy of the source.",
+      "Legal footer links are placeholders (# / no destination) pending real URLs from Broadridge.",
+      "Hero adds a navy scrim over the photo for text legibility (source relies on the image being dark)."
+    ]
+  }
+}

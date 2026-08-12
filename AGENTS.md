@@ -201,9 +201,14 @@ must remember.* Before opening a PR, run the `broadridge-block-review` and `broa
 - Canonical content + metadata in first-pass markup; fragments for non-canonical content only.
 - WCAG 2.1 AA (heading order, alt text, contrast, keyboard). Never hardcode user-facing text — placeholders
   with camelCase keys, `Intl` for formatting, logical properties for RTL.
+- **Visual parity (migration):** verify rendered output, never raw `.plain.html` — the delivery pipeline
+  mutates markup (strips `#fragment` hrefs, rewrites images). After any `blocks/**` or `styles/*.css` edit the
+  visual-diff hook renders the block and reports drift vs. `tools/quality/source-baseline.json` (advisory);
+  fix it or record intentional deviations in `visual-diff-allowlist.json`. Full parity + a11y pass against the
+  live preview before every PR. See [broadridge-EDS-RULES.md §8](docs/broadridge-EDS-RULES.md).
 
 **Enforcement:** `npm run lint`, `npm run broadridge:check` (breakpoints, SVG size, color tokens, security,
-redirect map), `npm run broadridge:test:unit`, axe-core a11y and visual-regression diffs in CI, plus the PR template.
+redirect map, **visual-diff**), `npm run broadridge:test:unit`, and axe-core a11y in CI, plus the PR template.
 
 **AI tools:** read [docs/broadridge-AI-CONTRACT.md](docs/broadridge-AI-CONTRACT.md) before starting.
 

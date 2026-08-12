@@ -96,6 +96,34 @@ remember.** Where a `[review-only]` rule proves important and checkable, promote
 - **WCAG 2.1 AA:** correct heading order (one `h1`, no skipped levels); alt text — descriptive for content
   images, `alt=""` for decorative; sufficient contrast; full keyboard access; ARIA where semantics need it. `[enforced-by: axe-core CI]`
 
+## 8. Visual parity vs. the source (migration)
+
+The single most common migration defect is silent drift: block code changes but no longer matches the
+original site. Three render targets exist and are **not** equal — never confuse them:
+
+1. **Source** — `broadridge.com/cit/*`, the design truth.
+2. **Local content** — `content/*.plain.html` (static; pre-pipeline).
+3. **Live preview** — `{branch}--{repo}--{owner}.aem.page` (post-delivery-pipeline: strips bare `#fragment`
+   hrefs, gzips, rewrites images to `<picture>`, etc.).
+
+**Rules:**
+- **Always verify rendered output, never raw static HTML.** A change "confirmed" against `.plain.html` or a
+  file read can still differ live (e.g. the pipeline flattening `#talk-to-us` → `/`). Verify against the
+  local render (headless) and, before a PR, against the **live preview**. `[enforced-by: visual-diff hook (advisory) + pre-PR critique]`
+- **`source-baseline.json` is the truth to diff against.** `tools/quality/source-baseline.json` holds the
+  source's per-block computed styles (colors, fonts, sizes, section backgrounds). Recapture only when the
+  source legitimately changes.
+- **The visual-diff hook runs after every `blocks/**` or `styles/*.css` edit** (`broadridge-visual-diff.mjs`,
+  advisory): it renders each changed block against fixture content, extracts computed styles, and prints any
+  drift vs. the baseline. Address flagged drift — either fix the block CSS, or, if intentional, add it to
+  `tools/quality/visual-diff-allowlist.json` with a reason. Run manually: `npm run broadridge:check:visual`.
+- **Intentional deviations are documented, not silent.** The FreightSans→fallback stack, single vs. alternating
+  greys, form-as-section (not modal), and hero scrim live in `visual-diff-allowlist.json`. Anything not listed
+  is treated as a real regression.
+- **Before any PR, run the full parity pass** against the live preview: `excat-visual-critique` (page/site
+  mode) + `npm run broadridge:test:a11y -- <preview-urls>` for layout, imagery, and a11y the per-block hook
+  can't see. `[enforced-by: broadridge-pr-readiness]`
+
 ---
 
 ## Sources & attribution
