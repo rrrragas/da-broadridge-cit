@@ -2,6 +2,13 @@
   "_README": "Project defaults for broadridge visual checks (docs/broadridge-VISUAL-TESTING.md). Values here are used when the matching --flag is not passed on the CLI, so day-to-day you only pass --scope / --path / --block.",
   "owner": "rrrragas",
   "repo": "da-broadridge-cit",
+  "checks": {
+    "_README": "CI only: which combos run on PRs. The matrix = enabled sources × enabled scopes. Local CLI runs ignore these (explicit --scope/--mode always run).",
+    "regression": true,
+    "parity": true,
+    "fullpage": true,
+    "block": true
+  },
   "regressionBase": "https://main--da-broadridge-cit--rrrragas.aem.live",
   "parityBase": "",
   "localCandidate": "http://localhost:3000",

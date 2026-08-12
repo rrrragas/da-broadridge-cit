@@ -86,7 +86,8 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `tools/quality/broadridge-visual-check.mjs` | Playwright + pixelmatch visual diff (mobile/tablet/desktop); writes before/after/diff PNGs. Per-target full-URL base/candidate overrides; skips 404 targets. | `broadridge:test:visual` → **dev locally + the two visual PR workflows**. |
 | `tools/quality/broadridge-visual-parse-pr.mjs` | Parses the `visual:start` block in a PR description into a per-mode manifest (regression uses `before=`, parity uses `live=`). | Run inside the visual workflows. |
 | `tools/quality/broadridge-visual-targets.json` | Default manifest (paths + viewports) for regression fallback when the PR lists no URLs. | Read by `broadridge-visual-check.mjs`. |
-| `tools/quality/broadridge-visual.config.json` | Project defaults (regressionBase, parityBase, localCandidate, threshold, viewports) so CLI runs need only `--scope`/`--path`/`--block`. | Read by `broadridge-visual-check.mjs`. |
+| `tools/quality/broadridge-visual.config.json` | Project defaults (regressionBase, parityBase, localCandidate, threshold, viewports) + `checks` CI on/off toggles. CLI runs need only `--scope`/`--path`/`--block`. | Read by `broadridge-visual-check.mjs` + `broadridge-visual-matrix.mjs`. |
+| `tools/quality/broadridge-visual-matrix.mjs` | Builds the CI matrix from `config.checks` (enabled sources × scopes); disabled combos don't run. | Run by the `setup` job in `broadridge-visual.yaml`. |
 | `test/broadridge-utils.test.js` | 7 unit tests for `isSafeUrl`/`formatCurrency`. | **Vitest**, via `broadridge:test:unit` → dev + CI push build. |
 | `scripts/broadridge-utils.js` | Runtime helpers (`isSafeUrl`, `formatCurrency`) for blocks. Example: `import { isSafeUrl } from '../../scripts/broadridge-utils.js'`. | **The browser**, at page load, when a block that imports it runs. No block imports it yet — it's a provided, tested helper. |
 

@@ -9,24 +9,35 @@ on:
       - 'head.html'
       - 'tools/quality/broadridge-visual-check.mjs'
       - 'tools/quality/broadridge-visual-parse-pr.mjs'
+      - 'tools/quality/broadridge-visual-matrix.mjs'
       - 'tools/quality/broadridge-visual-targets.json'
+      - 'tools/quality/broadridge-visual.config.json'
   workflow_dispatch: {}
 
-# One matrix → four checks: {regression, parity} × {fullpage, block}. See docs/broadridge-VISUAL-TESTING.md.
-#  - regression = EDS main (before=) vs branch (after=);  parity = legacy (live=) vs branch (after=)
-#  - fullpage = whole page;  block = a single element (block=<name> → .<name>, or selector=)
-# URLs come from the PR description's `visual:start` block (parsed per mode). Regression+fullpage falls back to
-# the default manifest (main vs branch) when the PR lists no URLs. Report-only (continue-on-error); no PNGs in git.
+# Matrix of {regression, parity} × {fullpage, block}, PRUNED by the `checks` toggles in
+# tools/quality/broadridge-visual.config.json (the `setup` job builds the matrix). Disabled combos don't run.
+# URLs come from the PR description's `visual:start` block; regression+fullpage falls back to the default
+# manifest. Report-only (continue-on-error); no PNGs in git. See docs/broadridge-VISUAL-TESTING.md.
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.gen.outputs.matrix }}
+      any: ${{ steps.gen.outputs.any }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: gen
+        run: node tools/quality/broadridge-visual-matrix.mjs >> "$GITHUB_OUTPUT"
+
   visual:
+    needs: setup
+    if: needs.setup.outputs.any == 'true'
     name: visual (${{ matrix.mode }}, ${{ matrix.scope }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        mode: [regression, parity]
-        scope: [fullpage, block]
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     env:
       BASE: ${{ format('https://main--da-broadridge-cit--{0}.aem.live', github.repository_owner) }}
       CANDIDATE: ${{ (github.head_ref && format('https://{0}--da-broadridge-cit--{1}.aem.page', github.head_ref, github.repository_owner)) || format('https://main--da-broadridge-cit--{0}.aem.page', github.repository_owner) }}
@@ -42,7 +53,6 @@ jobs:
         id: m
         run: |
           node tools/quality/broadridge-visual-parse-pr.mjs --mode ${{ matrix.mode }} --out /tmp/m.json
-          # regression + fullpage: fall back to the default paths manifest when the PR lists no URLs
           if [ "$(node -e "process.stdout.write(String(require('/tmp/m.json').length))")" = "0" ] \
              && [ "${{ matrix.mode }}" = "regression" ] && [ "${{ matrix.scope }}" = "fullpage" ]; then
             cp tools/quality/broadridge-visual-targets.json /tmp/m.json

@@ -31,6 +31,12 @@ Project defaults live in `tools/quality/broadridge-visual.config.json`, so you r
 | `parityBase` | BEFORE for migration parity (the legacy/source site) — **fill this in** |
 | `localCandidate` | AFTER for local runs (`http://localhost:3000`) |
 | `threshold`, `viewports` | diff sensitivity + which sizes to capture |
+| `checks` | **CI on/off toggles** — `regression`, `parity`, `fullpage`, `block` (all default `true`) |
+
+**Turning CI checks on/off (`checks`):** the PR matrix is the cross-product of enabled **sources**
+(`regression`/`parity`) × enabled **scopes** (`fullpage`/`block`). Set any to `false` to drop those checks —
+e.g. `"parity": false` until migration starts, or `"block": false` early on. Disabled combos don't appear as
+checks at all. These toggles are **CI-only**; a local `--mode`/`--scope` always runs regardless.
 
 - **Locally:** the tool reads the config, so `--mode regression` uses `regressionBase` and `--mode parity` uses
   `parityBase` automatically. Any `--flag` overrides the config.

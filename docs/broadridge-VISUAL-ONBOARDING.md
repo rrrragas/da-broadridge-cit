@@ -30,9 +30,13 @@ Project defaults (which URLs, sensitivity, screen sizes) live in
   "parityBase": "",                       // ← set this to the legacy/source site
   "localCandidate": "http://localhost:3000",
   "threshold": 0.001,
-  "viewports": ["mobile", "tablet", "desktop"]
+  "viewports": ["mobile", "tablet", "desktop"],
+  "checks": { "regression": true, "parity": true, "fullpage": true, "block": true }
 }
 ```
+
+`checks` are **CI on/off toggles** — the PR runs enabled *sources* (regression/parity) × enabled *scopes*
+(fullpage/block). Turn `parity` off until migration starts, or `block` off early on. (Local commands ignore these.)
 
 ---
 
