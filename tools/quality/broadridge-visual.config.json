@@ -18,8 +18,8 @@
     {
       "edsPath": "/cit",
       "livePath": "/cit",
-      "block": "hero-banner",
-      "baseSelector": ".et_pb_fullwidth_header"
+      "edsSelector": ".hero-banner",
+      "liveSelector": ".et_pb_fullwidth_header"
     }
   ]
 }

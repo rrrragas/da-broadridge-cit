@@ -61,19 +61,19 @@ Fields:
 |---|---|---|
 | `edsPath` | EDS page (candidate + regression source) | the EDS path, e.g. `/cit` — appended to `localCandidate`/branch and `regressionBase` |
 | `livePath` | live/legacy page (parity source) | the live-site path, e.g. `/cit` — appended to `parityBase`. Set it only if it **differs** from `edsPath` (defaults to `edsPath`) |
-| `block` | EDS side | EDS block name → `.block`, e.g. `hero-banner` |
-| `selector` | EDS side | *optional* raw CSS instead of `block` |
-| `baseSelector` | live/legacy side | the legacy element's CSS, e.g. `.et_pb_fullwidth_header` |
+| `edsSelector` | EDS side | the EDS element's CSS (block scope), e.g. `.hero-banner` |
+| `liveSelector` | live/legacy side | the live element's CSS (block scope, parity), e.g. `.et_pb_fullwidth_header` |
 | `viewports` | — | *optional* override of the config viewports |
 | `base` / `candidate` | — | *optional* full-URL escape hatch (reintroduces a domain — avoid unless a page truly needs it) |
 
-> `path`/`legacyPath` are accepted as aliases for `edsPath`/`livePath`.
+> Aliases: `path`/`legacyPath` for `edsPath`/`livePath`; `block` (name → `.name`) / `selector` for `edsSelector`;
+> `baseSelector` for `liveSelector`.
 
 Example (CIT — the EDS and live pages share the `/cit` route here; set `livePath` differently when they don't):
 
 ```json
 "targets": [
-  { "edsPath": "/cit", "livePath": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
+  { "edsPath": "/cit", "livePath": "/cit", "edsSelector": ".hero-banner", "liveSelector": ".et_pb_fullwidth_header" }
 ]
 ```
 

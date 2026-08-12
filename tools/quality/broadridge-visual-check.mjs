@@ -168,10 +168,11 @@ try {
       let baseSel = null;
       if (scope === 'block') {
         const blockName = target.block || cliBlock;
-        candSel = target.selector || cliSelector || (blockName ? `.${blockName}` : null);
-        // baseSelector describes the LEGACY element, so it only applies when the base is the legacy
-        // site (parity). In regression both sides are EDS → the base uses the same block selector.
-        baseSel = (mode === 'parity' ? (target.baseSelector || cliBaseSelector) : null) || candSel;
+        // EDS-side selector: edsSelector (raw CSS) | selector | block name → `.name`.
+        candSel = target.edsSelector || target.selector || cliSelector || (blockName ? `.${blockName}` : null);
+        // Live/legacy-side selector (liveSelector | baseSelector) applies only in parity — in regression
+        // both sides are EDS, so the base uses the same edsSelector.
+        baseSel = (mode === 'parity' ? (target.liveSelector || target.baseSelector || cliBaseSelector) : null) || candSel;
         if (!candSel) {
           rows.push({ label, status: 'skipped', detail: 'block scope needs block= or selector=' });
           console.warn(`⚠ ${label} — skipped (block scope needs block= or selector=)`);
