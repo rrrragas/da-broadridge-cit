@@ -21,39 +21,64 @@ comparing against `main` would just 404 and skip. Point BASE at the legacy site 
 > pixel-diff **%** will usually be high even when they look alike. In this mode treat the **before/after images
 > as a side-by-side visual reference**, not a pass/fail threshold — which is another reason it stays report-only.
 
-### Setting the source site
+### Config — set the defaults once
 
-- **CI (all PRs):** set a repo **variable** `VISUAL_BASE_URL` (Settings → Secrets and variables → Actions →
-  Variables) to the legacy site origin, e.g. `https://www.legacy-cit-site.com`. The workflow uses it as BASE.
-- **CI (one-off):** run the workflow manually (Actions → Visual regression → *Run workflow*) and pass `base`
-  (and optionally `candidate`) inputs.
-- **Locally:** pass `--base https://www.legacy-cit-site.com`.
+Project defaults live in `tools/quality/broadridge-visual.config.json`, so you rarely pass URLs on the CLI:
 
-### Per-page overrides (when legacy paths differ)
+| Key | Used for |
+|---|---|
+| `regressionBase` | BEFORE for regression (EDS `main` live) |
+| `parityBase` | BEFORE for migration parity (the legacy/source site) — **fill this in** |
+| `localCandidate` | AFTER for local runs (`http://localhost:3000`) |
+| `threshold`, `viewports` | diff sensitivity + which sizes to capture |
+| `checks` | **CI on/off toggles** — `regression`, `parity`, `fullpage`, `block` (all default `true`) |
 
-If a legacy URL doesn't share the new EDS path, give the target its own full `base` (and/or `candidate`) URL:
+**Turning CI checks on/off (`checks`):** the PR matrix is the cross-product of enabled **sources**
+(`regression`/`parity`) × enabled **scopes** (`fullpage`/`block`). Set any to `false` to drop those checks —
+e.g. `"parity": false` until migration starts, or `"block": false` early on. Disabled combos don't appear as
+checks at all. These toggles are **CI-only**; a local `--mode`/`--scope` always runs regardless.
+
+- **Locally:** the tool reads the config, so `--mode regression` uses `regressionBase` and `--mode parity` uses
+  `parityBase` automatically. Any `--flag` overrides the config.
+- **In CI:** the matrix builds BEFORE/AFTER from the PR description's `before=`/`live=`/`after=` URLs (per page);
+  regression+fullpage falls back to `main` live vs the branch preview. `threshold`/`viewports` come from the config.
+
+## One config file — `tools/quality/broadridge-visual.config.json`
+
+Everything lives in a single file:
+
+- **Origins** — `regressionBase`, `parityBase`, `localCandidate` (domains only, no paths).
+- **Defaults** — `threshold`, `viewports`.
+- **CI toggles** — `checks`.
+- **`targets`** — the list of pages: per-page **paths** + **block selectors**. The tool joins
+  `<origin> + <target path>`, so a domain is never repeated in a target.
+
+## `targets` — one entry per page
+
+Fields:
+
+| Field | Side | Meaning |
+|---|---|---|
+| `edsPath` | EDS page (candidate + regression source) | the EDS path, e.g. `/cit` — appended to `localCandidate`/branch and `regressionBase` |
+| `livePath` | live/legacy page (parity source) | the live-site path, e.g. `/cit` — appended to `parityBase`. Set it only if it **differs** from `edsPath` (defaults to `edsPath`) |
+| `edsSelector` | EDS side | the EDS element's CSS (block scope), e.g. `.hero-banner` |
+| `liveSelector` | live/legacy side | the live element's CSS (block scope, parity), e.g. `.et_pb_fullwidth_header` |
+| `viewports` | — | *optional* override of the config viewports |
+| `base` / `candidate` | — | *optional* full-URL escape hatch (reintroduces a domain — avoid unless a page truly needs it) |
+
+> Aliases: `path`/`legacyPath` for `edsPath`/`livePath`; `block` (name → `.name`) / `selector` for `edsSelector`;
+> `baseSelector` for `liveSelector`.
+
+Example (CIT — the EDS and live pages share the `/cit` route here; set `livePath` differently when they don't):
 
 ```json
-[
-  { "path": "/cit", "viewports": ["mobile", "tablet", "desktop"] },
-  { "path": "/cit/hero", "base": "https://www.legacy-cit-site.com/investor/hero.html" }
+"targets": [
+  { "edsPath": "/cit", "livePath": "/cit", "edsSelector": ".hero-banner", "liveSelector": ".et_pb_fullwidth_header" }
 ]
 ```
 
-`/cit/hero`'s "before" is the explicit legacy URL; its "after" is `<candidate>/cit/hero`. Targets without a
-`base` fall back to `<--base origin> + path` as usual.
-
-## Targets — `tools/quality/broadridge-visual-targets.json`
-
-```json
-[
-  { "path": "/", "viewports": ["mobile", "tablet", "desktop"] }
-]
-```
-
-Seeded with `/`. **Add each migrated page path** here — ideally the homepage plus one representative page per
-template (article, product/PLP, contact, etc.) as they migrate. A path must exist on **both** base and candidate
-to be compared; otherwise it's **skipped with a warning** (never a crash), which is expected mid-migration.
+**Add each migrated page** to the `targets` array as you go — e.g. `{ "path": "/cit/products", "block": "cards" }`.
+A page must resolve on **both** sides or it's **skipped with a warning** (never a crash) — expected mid-migration.
 
 ## Run it locally (pre-check)
 
@@ -71,14 +96,48 @@ changed pixels are highlighted. Options: `--path /some/page` (one target), `--th
 > Caveat: `localhost` serves *previewed* content while `.aem.live` serves *published* content — content
 > differences add noise. For a purer **code-only** diff, point `--base` at `main--…aem.page` (main preview).
 
-## In CI
+## In CI — one matrix, four checks
 
-`.github/workflows/broadridge-visual.yaml` runs on PRs that touch `blocks/**`, `scripts/**`, `styles/**`,
-`head.html`, or the visual tool/manifest. It waits for the branch preview, diffs live-vs-branch, writes a table
-to the **job summary**, and uploads the before/after/diff PNGs as a **`visual-diff` artifact**.
+`.github/workflows/broadridge-visual.yaml` runs a **2×2 matrix** on PRs that touch `blocks/** scripts/** styles/**
+head.html` (or the visual tool/parser), producing four checks:
 
-**Report-only for sprint one** (`continue-on-error`) — it never fails the PR yet. To make it blocking once the
-baseline is clean: remove the two `continue-on-error: true` lines and drop `--report-only`.
+|  | fullpage | block |
+|---|---|---|
+| **regression** (`before=` vs `after=`) | whole page, main vs branch | one block, main vs branch |
+| **parity** (`live=` vs `after=`) | whole page, legacy vs branch | one block, legacy vs branch |
+
+- **Source** comes from the parser `--mode` (regression uses `before=`, parity uses `live=`).
+- **Scope** comes from the tool `--scope` (block uses `block=<name>` → `.<name>`, or `selector=`).
+- Artifacts: `visual-<mode>-<scope>-diff`. Each combo with no matching URLs is a **no-op** (regression+fullpage
+  falls back to the default `main-vs-branch` manifest so it always has something to show).
+
+All read the **PR description** — one line per changed page between the markers (see the PR template):
+
+```
+<!-- visual:start -->
+- cit-hero | after=https://<branch>--…aem.page/cit/hero | before=https://main--…aem.live/cit/hero | live=https://legacy…/hero.html | block=hero-banner
+<!-- visual:end -->
+```
+
+`tools/quality/broadridge-visual-parse-pr.mjs` turns those lines into a per-mode manifest;
+`broadridge-visual-check.mjs` runs it at the chosen scope. The whole matrix can also be run from the **Actions**
+tab (`workflow_dispatch`).
+
+**Report-only for sprint one** (`continue-on-error`) — no combo fails the PR yet. To make one blocking (e.g.
+regression+fullpage) once its baseline is clean, split that combo out or gate it; keep parity report-only (legacy
+vs EDS is a visual reference, not a threshold gate).
+
+### Locally — two skills
+Use the **`broadridge-visual`** skill (or `npm run broadridge:visual:all`). With the config supplying base/candidate,
+the commands are short:
+```bash
+# full page, regression (base=main live, candidate=localhost from config)
+npm run broadridge:test:visual -- --scope fullpage --path /cit
+# one block, regression
+npm run broadridge:test:visual -- --scope block --block hero-banner --path /cit
+# migration parity (base=config.parityBase)
+npm run broadridge:test:visual -- --mode parity --scope block --block hero-banner --base-selector ".legacy-hero" --path /cit
+```
 
 ## Reading a result
 

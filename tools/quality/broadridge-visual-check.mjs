@@ -5,13 +5,14 @@
  *
  * Screenshots each manifest path at mobile/tablet/desktop on BOTH base and candidate, pads the two
  * full-page images to a common canvas (pixelmatch needs equal dimensions), diffs them, and writes
- * before/after/diff PNGs. Missing/404 targets are skipped with a warning — never a crash (important
- * during migration when a page exists on only one side).
+ * PNGs named for what each side actually is — eds-main/eds-branch/diff.png (regression) or
+ * livesite/eds/diff.png (parity) — instead of generic before/after. Missing/404 targets are skipped
+ * with a warning — never a crash (important during migration when a page exists on only one side).
  *
  * Usage:
  *   node tools/quality/broadridge-visual-check.mjs --base <url> --candidate <url> [options]
  * Options:
- *   --manifest <path>   default tools/quality/broadridge-visual-targets.json
+ *   --manifest <path>   pages to check (default: the `targets` array in broadridge-visual.config.json)
  *   --out <dir>         default tools/quality/visual-output
  *   --threshold <ratio> default 0.001 (0.1% of pixels)
  *   --path <p>          only this manifest path
@@ -44,18 +45,27 @@ function arg(name, fallback) {
 }
 const hasFlag = (name) => process.argv.includes(`--${name}`);
 
-const base = arg('base');
-const candidate = arg('candidate');
-const manifestPath = arg('manifest', 'tools/quality/broadridge-visual-targets.json');
+// Project defaults live in a config file so day-to-day you only pass --scope / --path / --block.
+// Any --flag overrides the config; a manifest target may override per page.
+const configPath = arg('config', 'tools/quality/broadridge-visual.config.json');
+let config = {};
+try { config = JSON.parse(readFileSync(configPath, 'utf8')); } catch { /* config is optional */ }
+
+const mode = arg('mode', 'regression'); // 'regression' → config.regressionBase | 'parity' → config.parityBase
+const base = arg('base') || (mode === 'parity' ? config.parityBase : config.regressionBase) || null;
+const candidate = arg('candidate') || config.localCandidate || null;
+const manifestPath = arg('manifest'); // CI passes a generated manifest; otherwise use config.targets
 const outDir = arg('out', 'tools/quality/visual-output');
-const threshold = parseFloat(arg('threshold', '0.001'));
+const threshold = arg('threshold') ? parseFloat(arg('threshold')) : (typeof config.threshold === 'number' ? config.threshold : 0.001);
 const onlyPath = arg('path');
 const reportOnly = hasFlag('report-only');
+const scope = arg('scope', 'fullpage'); // 'fullpage' (whole page) or 'block' (a single element)
+const cliBlock = arg('block'); // block-scope default: EDS block name → `.name` (applies to targets lacking one)
+const cliSelector = arg('selector'); // block-scope default: raw CSS selector
+const cliBaseSelector = arg('base-selector'); // block-scope: selector for the base side only (legacy markup)
 
-if (!base || !candidate) {
-  console.error('Usage: --base <url> --candidate <url> [--manifest --out --threshold --path --report-only]');
-  process.exit(1);
-}
+// base/candidate above come from --flag, else the config (by mode), else null. A manifest target may
+// still carry its own full `base`/`candidate` URLs (PR-supplied). Targets that resolve to neither are skipped.
 
 const VIEWPORTS = {
   mobile: { width: 375, height: 667 },
@@ -66,20 +76,40 @@ const VIEWPORTS = {
 const stripTrailing = (u) => u.replace(/\/+$/, '');
 const slug = (s) => s.replace(/[^\w]+/g, '_').replace(/^_|_$/g, '') || 'root';
 
+// Output filenames name each side by what it actually is instead of generic before/after,
+// so `ls tools/quality/visual-output` is self-explanatory without checking --mode.
+// regression: base = EDS main (production) vs candidate = EDS branch (local/PR).
+// parity: base = the legacy/live site vs candidate = the migrated EDS page.
+const SIDE_LABELS = {
+  regression: { base: 'eds-main', candidate: 'eds-branch' },
+  parity: { base: 'livesite', candidate: 'eds' },
+};
+const { base: baseLabel, candidate: candLabel } = SIDE_LABELS[mode] || SIDE_LABELS.regression;
+
 let manifest;
-try {
-  manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-} catch (e) {
-  console.error(`Cannot read manifest ${manifestPath}: ${e.message}`);
-  process.exit(1);
+if (manifestPath) {
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch (e) {
+    console.error(`Cannot read manifest ${manifestPath}: ${e.message}`);
+    process.exit(1);
+  }
+} else if (Array.isArray(config.targets)) {
+  manifest = config.targets;
+} else {
+  console.error(`No pages to check — add a "targets" array to ${configPath} (or pass --manifest).`);
+  process.exit(reportOnly ? 0 : 1);
 }
-if (onlyPath) manifest = manifest.filter((t) => t.path === onlyPath);
+if (onlyPath) manifest = manifest.filter((t) => (t.edsPath || t.path) === onlyPath);
 if (!manifest.length) { console.error('No targets to check.'); process.exit(reportOnly ? 0 : 1); }
 
 mkdirSync(outDir, { recursive: true });
 
-/** Screenshot url at a viewport → { ok, buffer } (ok:false on non-200 or nav error). */
-async function shoot(browser, url, vp) {
+/**
+ * Screenshot url at a viewport → { ok, buffer }. With `selector`, captures just that element
+ * (block-level); otherwise the full page. ok:false on non-200, nav error, or missing selector.
+ */
+async function shoot(browser, url, vp, selector) {
   const page = await browser.newPage();
   try {
     await page.setViewportSize(vp);
@@ -87,7 +117,15 @@ async function shoot(browser, url, vp) {
     const resp = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
     if (!resp || resp.status() >= 400) return { ok: false, reason: `HTTP ${resp ? resp.status() : 'no-response'}` };
     await page.waitForTimeout(1500); // settle animations/fonts
-    const buffer = await page.screenshot({ fullPage: true });
+    let buffer;
+    if (selector) {
+      if (await page.locator(selector).count() === 0) return { ok: false, reason: `selector ${selector} not found` };
+      const el = page.locator(selector).first();
+      await el.scrollIntoViewIfNeeded();
+      buffer = await el.screenshot();
+    } else {
+      buffer = await page.screenshot({ fullPage: true });
+    }
     return { ok: true, buffer };
   } catch (e) {
     return { ok: false, reason: e.message.split('\n')[0] };
@@ -116,20 +154,45 @@ const rows = [];
 const browser = await chromium.launch();
 try {
   for (const target of manifest) {
-    const vps = (target.viewports && target.viewports.length ? target.viewports : Object.keys(VIEWPORTS));
+    // Domains come from the config; the target supplies the PATHS. `edsPath` = the page on the EDS site
+    // (destination + regression source); `livePath` = the page on the live/legacy site (parity source),
+    // defaulting to edsPath when they match. (`path`/`legacyPath` accepted as aliases; CI passes full URLs.)
+    const edsPath = target.edsPath || target.path;
+    const livePath = target.livePath || target.legacyPath || edsPath;
+    const cfgVps = Array.isArray(config.viewports) && config.viewports.length ? config.viewports : Object.keys(VIEWPORTS);
+    const vps = (target.viewports && target.viewports.length ? target.viewports : cfgVps);
     for (const vpName of vps) {
       const vp = VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }
-      const label = `${target.path} @ ${vpName}`;
-      // Per-target full-URL overrides support migration parity, where the legacy/source page lives
-      // at a different path/origin than the new EDS page — e.g.
-      //   { "path": "/cit/hero", "base": "https://legacy.example.com/investor/hero.html" }
-      // compares the legacy hero against <candidate>/cit/hero. Falls back to <origin> + path.
-      const baseUrl = target.base || (stripTrailing(base) + target.path);
-      const candUrl = target.candidate || (stripTrailing(candidate) + target.path);
+      const label = `${edsPath} @ ${vpName}`;
+      const srcPath = (mode === 'parity') ? livePath : edsPath; // base side path
+      const baseUrl = target.base || (base ? stripTrailing(base) + srcPath : null);
+      const candUrl = target.candidate || (candidate ? stripTrailing(candidate) + edsPath : null);
+      if (!baseUrl || !candUrl) {
+        rows.push({ label, status: 'skipped', detail: 'no base/candidate URL' });
+        console.warn(`⚠ ${label} — skipped (no base/candidate URL — set --base/--candidate or target.base/candidate)`);
+        continue;
+      }
+      // Block scope: capture a single element. `block` maps to the EDS class `.block`; `selector`/
+      // `baseSelector` are raw CSS overrides (baseSelector is for the legacy side in parity mode).
+      let candSel = null;
+      let baseSel = null;
+      if (scope === 'block') {
+        const blockName = target.block || cliBlock;
+        // EDS-side selector: edsSelector (raw CSS) | selector | block name → `.name`.
+        candSel = target.edsSelector || target.selector || cliSelector || (blockName ? `.${blockName}` : null);
+        // Live/legacy-side selector (liveSelector | baseSelector) applies only in parity — in regression
+        // both sides are EDS, so the base uses the same edsSelector.
+        baseSel = (mode === 'parity' ? (target.liveSelector || target.baseSelector || cliBaseSelector) : null) || candSel;
+        if (!candSel) {
+          rows.push({ label, status: 'skipped', detail: 'block scope needs block= or selector=' });
+          console.warn(`⚠ ${label} — skipped (block scope needs block= or selector=)`);
+          continue;
+        }
+      }
       const [b, c] = await Promise.all([
-        shoot(browser, baseUrl, vp),
-        shoot(browser, candUrl, vp),
+        shoot(browser, baseUrl, vp, baseSel),
+        shoot(browser, candUrl, vp, candSel),
       ]);
       if (!b.ok || !c.ok) {
         const why = [!b.ok && `base ${b.reason}`, !c.ok && `candidate ${c.reason}`].filter(Boolean).join(', ');
@@ -146,12 +209,12 @@ try {
       const diff = new PNG({ width: W, height: H });
       const changed = pixelmatch(bp.data, cp.data, diff.data, W, H, { threshold: 0.1, includeAA: false });
       const ratio = changed / (W * H);
-      const stem = join(outDir, `${slug(target.path)}-${vpName}`);
-      writeFileSync(`${stem}-before.png`, PNG.sync.write(bp));
-      writeFileSync(`${stem}-after.png`, PNG.sync.write(cp));
+      const stem = join(outDir, `${slug(edsPath)}-${vpName}`);
+      writeFileSync(`${stem}-${baseLabel}.png`, PNG.sync.write(bp));
+      writeFileSync(`${stem}-${candLabel}.png`, PNG.sync.write(cp));
       writeFileSync(`${stem}-diff.png`, PNG.sync.write(diff));
       const status = ratio > threshold ? 'CHANGED' : 'ok';
-      rows.push({ label, status, ratio, files: `${slug(target.path)}-${vpName}-{before,after,diff}.png` });
+      rows.push({ label, status, ratio, files: `${slug(edsPath)}-${vpName}-{${baseLabel},${candLabel},diff}.png` });
       console.log(`${status === 'CHANGED' ? '✗' : '✓'} ${label} — ${(ratio * 100).toFixed(3)}% diff`);
     }
   }
@@ -162,8 +225,8 @@ try {
 // ---- summary (console + markdown for CI step summary) ----
 const changed = rows.filter((r) => r.status === 'CHANGED');
 const skipped = rows.filter((r) => r.status === 'skipped');
-let md = `## Visual regression — base vs candidate\n\n`;
-md += `Base: ${base}\nCandidate: ${candidate}\nThreshold: ${(threshold * 100).toFixed(3)}%\n\n`;
+let md = `## Visual diff (${scope}) — base vs candidate\n\n`;
+md += `Base: ${base || '(per-target)'}\nCandidate: ${candidate || '(per-target)'}\nScope: ${scope}\nThreshold: ${(threshold * 100).toFixed(3)}%\n\n`;
 md += `| Target | Status | Diff | Artifacts |\n|---|---|---|---|\n`;
 for (const r of rows) {
   const diffCol = r.ratio !== undefined ? `${(r.ratio * 100).toFixed(3)}%` : (r.detail || '');

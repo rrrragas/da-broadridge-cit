@@ -1,0 +1,25 @@
+{
+  "_README": "Single config for broadridge visual checks (docs/broadridge-VISUAL-TESTING.md). 'targets' lists the pages (paths + block selectors); the origins/defaults above apply to all. Day-to-day you only pass --scope / --path / --block.",
+  "owner": "rrrragas",
+  "repo": "da-broadridge-cit",
+  "regressionBase": "https://main--da-broadridge-cit--rrrragas.aem.page",
+  "parityBase": "https://www.broadridge.com",
+  "localCandidate": "http://localhost:3000",
+  "threshold": 0.001,
+  "viewports": ["mobile", "tablet", "desktop"],
+  "checks": {
+    "_README": "CI only: which combos run on PRs. Matrix = enabled sources × enabled scopes. Local CLI ignores these.",
+    "regression": true,
+    "parity": true,
+    "fullpage": true,
+    "block": true
+  },
+  "targets": [
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": ".hero-banner",
+      "liveSelector": ".et_pb_fullwidth_header"
+    }
+  ]
+}

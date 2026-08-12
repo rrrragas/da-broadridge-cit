@@ -17,7 +17,9 @@
     "broadridge:check": "npm run broadridge:check:breakpoints && npm run broadridge:check:svg && npm run broadridge:check:colors && npm run broadridge:check:security && npm run broadridge:check:redirects && npm run broadridge:check:visual",
     "broadridge:test:unit": "vitest run",
     "broadridge:test:a11y": "node tools/quality/broadridge-a11y-check.mjs",
-    "broadridge:test:visual": "node tools/quality/broadridge-visual-check.mjs"
+    "broadridge:test:visual": "node tools/quality/broadridge-visual-check.mjs",
+    "broadridge:visual:all": "node tools/quality/broadridge-visual-all.mjs",
+    "broadridge:audit:blocks": "node tools/quality/broadridge-block-audit.mjs"
   },
   "repository": {
     "type": "git",

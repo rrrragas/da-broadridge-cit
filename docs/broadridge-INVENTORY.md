@@ -48,7 +48,8 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `docs/broadridge-SEO-METADATA.md` | Metadata schema, canonical, hreflang, JSON-LD. | Pull. Used during authoring/migration. |
 | `docs/broadridge-MIGRATION-RUNBOOK.md` | 6-phase migration process + rollback. | Pull. Used by whoever runs the migration. |
 | `docs/broadridge-AI-CONTRACT.md` | Hard constraints + required workflow for AI tools. | Pull, but **pointed at from AGENTS.md**, so an AI is directed to `Read` it at task start. |
-| `docs/broadridge-VISUAL-TESTING.md` | Visual-regression model, local + CI usage, reading diffs, extending the manifest. | Pull. Linked from the block-review skill + visual CI. |
+| `docs/broadridge-VISUAL-TESTING.md` | Visual-regression model, config, workflows, reading diffs. | Pull. Linked from the block-review skill + visual CI. |
+| `docs/broadridge-VISUAL-ONBOARDING.md` | Junior-dev walkthrough: how to invoke, inputs, step-by-step, output (local + CI). | Pull. New-dev onboarding. |
 | `docs/broadridge-INVENTORY.md` | This document. | Pull. |
 
 ## 3. Skills (trigger-loaded)
@@ -58,6 +59,7 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `.claude/skills/broadridge-block-review/SKILL.md` | Pre-PR block self-review checklist. | **The Skill tool.** At session start the harness registers only `name`+`description`; the **full body loads when invoked** — description match ("modified an EDS block"), a user typing `/broadridge-block-review`, or the model choosing it. |
 | `.claude/skills/broadridge-pr-readiness/SKILL.md` | Definition of done before a PR. | Same. Loads when preparing a PR. |
 | `.claude/skills/broadridge-i18n-rtl/SKILL.md` | Placeholders/`Intl`/RTL guidance. | Same. Loads when code touches user-facing text or locales. |
+| `.claude/skills/broadridge-visual/SKILL.md` | Run visual comparison — full-page or block, regression or parity — locally (`broadridge:visual:all` or per-combo). | Same. Loads when doing a visual check. |
 | `.agents/skills/broadridge-*/SKILL.md` (3 mirrors) | Byte-identical copies. | Read by **other agent tooling that consumes `.agents/`** (the repo already maintained this twin tree). Kept in sync. |
 
 ## 4. Harness & tooling config
@@ -80,8 +82,10 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `tools/quality/broadridge-security-check.mjs` | **Fails** on `eval`/`new Function`/`document.write`/`javascript:` URLs; **warns** on `innerHTML`. | `broadridge:check:security` → dev + CI. |
 | `tools/quality/broadridge-redirect-map-check.mjs` | Validates `redirects.csv` format (skips if absent). | `broadridge:check:redirects` → dev + CI. |
 | `tools/quality/broadridge-a11y-check.mjs` | axe-core WCAG 2.1 A/AA audit of URLs. | `broadridge:test:a11y` → **dev locally + the `broadridge-a11y.yaml` PR workflow**. |
-| `tools/quality/broadridge-visual-check.mjs` | Playwright + pixelmatch visual diff of production vs branch (mobile/tablet/desktop); writes before/after/diff PNGs. Skips 404 targets. | `broadridge:test:visual` → **dev locally + the `broadridge-visual.yaml` PR workflow**. |
-| `tools/quality/broadridge-visual-targets.json` | Manifest of page paths + viewports to compare. Seeded with `/`; team extends per migrated page. | Read by `broadridge-visual-check.mjs`. |
+| `tools/quality/broadridge-visual-check.mjs` | Playwright + pixelmatch visual diff (mobile/tablet/desktop); writes before/after/diff PNGs. Reads pages from `config.targets`; skips 404 targets. | `broadridge:test:visual` → **dev locally + the visual matrix PR workflow**. |
+| `tools/quality/broadridge-visual-parse-pr.mjs` | Parses the `visual:start` block in a PR description into a per-mode manifest (regression uses `before=`, parity uses `live=`). | Run inside the visual workflows. |
+| `tools/quality/broadridge-visual.config.json` | **Single config**: origins (regressionBase/parityBase/localCandidate), defaults (threshold/viewports), `checks` CI toggles, and the `targets` array (per-page paths + block selectors). | Read by `broadridge-visual-check.mjs` + `broadridge-visual-matrix.mjs`. |
+| `tools/quality/broadridge-visual-matrix.mjs` | Builds the CI matrix from `config.checks` (enabled sources × scopes); disabled combos don't run. | Run by the `setup` job in `broadridge-visual.yaml`. |
 | `test/broadridge-utils.test.js` | 7 unit tests for `isSafeUrl`/`formatCurrency`. | **Vitest**, via `broadridge:test:unit` → dev + CI push build. |
 | `scripts/broadridge-utils.js` | Runtime helpers (`isSafeUrl`, `formatCurrency`) for blocks. Example: `import { isSafeUrl } from '../../scripts/broadridge-utils.js'`. | **The browser**, at page load, when a block that imports it runs. No block imports it yet — it's a provided, tested helper. |
 
@@ -91,7 +95,7 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 |---|---|---|
 | `.github/workflows/main.yaml` *(modified)* | Runs `npm ci` → `lint` → `broadridge:check` → `broadridge:test:unit`. | **GitHub Actions, on every `push`** (`on: [push]`). |
 | `.github/workflows/broadridge-a11y.yaml` *(new)* | Waits for the branch preview, runs axe-core against it. | **GitHub Actions, on `pull_request` to `main`**. |
-| `.github/workflows/broadridge-visual.yaml` *(new)* | Diffs production vs branch preview; uploads `visual-diff` artifact + job summary. Report-only. | **GitHub Actions, on `pull_request` touching `blocks/** scripts/** styles/** head.html`**. |
+| `.github/workflows/broadridge-visual.yaml` *(new)* | 2×2 matrix → 4 checks: `(regression\|parity) × (fullpage\|block)`, driven by PR `before=`/`live=`/`after=`/`block=` URLs. Artifacts `visual-<mode>-<scope>-diff`. Report-only. | **GitHub Actions, on `pull_request` touching `blocks/** scripts/** styles/** head.html`** + manual. |
 | `.github/pull_request_template.md` *(modified)* | Pre-fills the PR body with the definition-of-done checklist. | **GitHub**, when a contributor **opens a PR**. |
 
 ---
