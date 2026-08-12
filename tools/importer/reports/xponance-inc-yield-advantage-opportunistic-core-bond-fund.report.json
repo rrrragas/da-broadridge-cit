@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/xponance-inc-yield-advantage-opportunistic-core-bond-fund",
+  "path": "xponance-inc-yield-advantage-opportunistic-core-bond-fund",
+  "timestamp": "2026-08-12T05:42:16.932Z",
+  "title": "Xponance Inc. Yield Advantage Opportunistic Core Bond Fund | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

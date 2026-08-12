@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/donaldson-preservation-fund",
+  "path": "donaldson-preservation-fund",
+  "timestamp": "2026-08-12T05:43:26.116Z",
+  "title": "Donaldson Preservation Fund | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

@@ -4,6 +4,7 @@ header .nav-wrapper {
   width: 100%;
   z-index: 2;
   position: fixed;
+  border-bottom: 1px solid var(--border-color);
 }
 
 header nav {
@@ -269,4 +270,25 @@ header nav .nav-sections ul > li > ul > li {
 /* tools */
 header nav .nav-tools {
   grid-area: tools;
+}
+
+/* brand styling */
+@media (width >= 900px) {
+  header nav .nav-sections a:any-link {
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: var(--body-font-size-xs);
+  }
+
+  header nav .nav-sections a:hover,
+  header nav .nav-sections .nav-drop:hover {
+    color: var(--brand-blue);
+  }
+
+  /* dropdown panel accent */
+  header nav .nav-sections .default-content-wrapper > ul > li[aria-expanded='true'] > ul {
+    border-top: 3px solid var(--brand-blue);
+    box-shadow: 0 6px 18px rgb(0 31 90 / 12%);
+  }
 }

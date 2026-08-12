@@ -1,0 +1,76 @@
+.form-contact .form-contact-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.form-contact .form-contact-title {
+  margin-top: 0;
+}
+
+.form-contact .form-contact-intro {
+  margin-bottom: 24px;
+}
+
+.form-contact .form-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-contact .form-contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-contact .form-contact-field label {
+  font-weight: 600;
+}
+
+.form-contact .form-contact-field input,
+.form-contact .form-contact-field select,
+.form-contact .form-contact-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color-strong);
+  border-radius: 4px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.form-contact .form-contact-field textarea {
+  resize: vertical;
+}
+
+.form-contact .form-contact-submit {
+  align-self: flex-start;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 2px;
+  background-color: var(--brand-blue);
+  color: var(--background-color);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.form-contact .form-contact-submit:hover,
+.form-contact .form-contact-submit:focus-visible {
+  background-color: var(--brand-navy);
+}
+
+.form-contact .form-contact-success h2 {
+  margin: 0;
+}
+
+.form-contact .form-contact-support {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.form-contact .form-contact-support p {
+  margin: 0 0 8px;
+}

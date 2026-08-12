@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/commerce-core-bond-cit",
+  "path": "commerce-core-bond-cit",
+  "timestamp": "2026-08-12T05:42:10.334Z",
+  "title": "Commerce Core Bond CIT | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

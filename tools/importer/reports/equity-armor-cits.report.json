@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/equity-armor-cits",
+  "path": "equity-armor-cits",
+  "timestamp": "2026-08-12T05:41:55.560Z",
+  "title": "Equity Armor CITs | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

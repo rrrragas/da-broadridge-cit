@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/donaldson-rising-dividend-fund",
+  "path": "donaldson-rising-dividend-fund",
+  "timestamp": "2026-08-12T05:43:20.352Z",
+  "title": "Donaldson Rising Dividend | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

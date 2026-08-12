@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/twelve-points-retirement-advisors-100-percent-equity-fund",
+  "path": "twelve-points-retirement-advisors-100-percent-equity-fund",
+  "timestamp": "2026-08-12T05:42:43.074Z",
+  "title": "Twelve Points Retirement Advisors 100% Equity Fund | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/terms-and-conditions",
+  "path": "terms-and-conditions",
+  "timestamp": "2026-08-12T05:42:51.292Z",
+  "title": "Matrix Terms of Service",
+  "template": "legal",
+  "blocks": [
+    "hero-banner"
+  ]
+}

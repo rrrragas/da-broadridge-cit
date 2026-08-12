@@ -1,0 +1,31 @@
+{
+  "variantName": "cards",
+  "baseBlock": "cards",
+  "version": "2.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "variants": {
+    "": "Base: image + text cards in a responsive grid.",
+    "feature": "Text-only feature tiles (solid brand-blue); whole tile clickable when the body contains a link."
+  },
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "middle"
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "grids of repeating item tiles (image + title + text)",
+      "text-only clickable feature/navigation tiles (use the 'feature' variant)",
+      "offering/product grids with thumbnails"
+    ],
+    "notSuitableFor": [
+      "a single call-to-action (use a button in default content or columns)"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  },
+  "supersedes": ["cards-feature"]
+}

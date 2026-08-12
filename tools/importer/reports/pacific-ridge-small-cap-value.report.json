@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/pacific-ridge-small-cap-value",
+  "path": "pacific-ridge-small-cap-value",
+  "timestamp": "2026-08-12T05:42:03.335Z",
+  "title": "Pacific Ridge Small Cap Value | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

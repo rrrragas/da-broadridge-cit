@@ -24,7 +24,10 @@ const browser = await chromium.launch();
 let total = 0;
 
 for (const url of urls) {
-  const page = await browser.newPage();
+  // @axe-core/playwright requires a BrowserContext-owned page (browser.newPage()
+  // is rejected by newer versions), so create an explicit context per URL.
+  const context = await browser.newContext();
+  const page = await context.newPage();
   try {
     await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
     const { violations } = await new AxeBuilder({ page })
@@ -44,7 +47,7 @@ for (const url of urls) {
     console.error(`✘ ${url} — could not audit: ${err.message}`);
     total += 1;
   } finally {
-    await page.close();
+    await context.close();
   }
 }
 

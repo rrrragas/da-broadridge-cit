@@ -1,0 +1,896 @@
+{
+  "metadata": {
+    "projectType": "da"
+  },
+  "templates": [
+    {
+      "name": "cit-landing",
+      "urls": [
+        "https://www.broadridge.com/cit/"
+      ],
+      "coverageGaps": [],
+      "description": "CIT landing page: hero-banner, definition default content, cards (feature variant, 2 tiles), form-contact (Talk to Us modal), columns (characteristics text+image and closing CTA) + columns (compare variant for CITs are/are not). Shared header nav and footer chrome.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "cards",
+          "instances": [
+            "#main-content > div.et_pb_section_1.welcomeSection div.et_pb_row_1.et_pb_equal_columns",
+            ".welcomeSection .et_pb_row_1.et_pb_equal_columns"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_2",
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
+            "#page-container > div.et_pb_section_3 > div.et_pb_row"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "s2",
+          "name": "Definition and Feature Cards",
+          "selector": [
+            "#main-content > div.et_pb_section_1.welcomeSection"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "cards"
+          ],
+          "defaultContent": [
+            ".welcomeSection .et_pb_row_0 .et_pb_text"
+          ]
+        },
+        {
+          "id": "s3",
+          "name": "Characteristics",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#page-container > div.et_pb_section_3"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": []
+        }
+      ]
+    },
+    {
+      "name": "cit-offerings",
+      "urls": [
+        "https://www.broadridge.com/cit/matrix-cits"
+      ],
+      "coverageGaps": [],
+      "description": "CIT offerings page (Matrix CITs): hero-banner, intro default content (demoted H3 lead-in), cards (offerings variant — 23 image-thumbnail fund tiles from div.box-container), columns (closing CTA, text-only), institutional-use disclaimer default content (#legal-notice paragraphs), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing parsers and transformers.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "cards",
+          "instances": [
+            "#main-content > div.box-container > div.sextion-boxes",
+            "div.box-container div.sextion-boxes"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro",
+          "selector": [
+            "#main-content > div.et_pb_section_1.welcomeSection"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            ".welcomeSection .et_pb_row_0 .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Offerings Grid",
+          "selector": [
+            "#main-content > div.box-container"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "cards"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s5",
+          "name": "Disclaimer",
+          "selector": [
+            "#main-content > div#legal-notice"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            "#legal-notice .et_pb_row_0 .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        }
+      ]
+    },
+    {
+      "name": "cit-services",
+      "urls": [
+        "https://www.broadridge.com/cit/cit-services"
+      ],
+      "coverageGaps": [],
+      "description": "CIT Services page: hero-banner, two intro/value-prop default-content sections (prose paragraphs demoted from Divi <h3>), a 6-item services default-content <ul> (li>h3 flattened to list text) plus a CIT logo image, a downloadable brochure default-content link (box-cover PDF tile normalized to a clean link), columns (closing CTA, text-only, javascript:void(0) rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/cit-offerings parsers and transformers; adds no new blocks.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro",
+          "selector": [
+            "#main-content > div.et_pb_section_1.welcomeSection"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            ".welcomeSection .et_pb_row_0 .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Value Prop and Services List",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            ".et_pb_section_2 .et_pb_row_1 .et_pb_text_inner",
+            ".et_pb_section_2 .et_pb_row_4"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s4",
+          "name": "Brochure",
+          "selector": [
+            "#main-content > div.box-container"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "div.box-container a.box-cover"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s5",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "broker-dealer-platform",
+      "urls": [
+        "https://www.broadridge.com/cit/broker-dealer-platform"
+      ],
+      "coverageGaps": [],
+      "description": "CIT Broker-Dealer Platform page: hero-banner, intro/value-prop default content (paragraph + 'Ensure compliance' heading + process-flow diagram image), cards (feature variant — 3 equal tiles: Plan Level Data Feed, Fiduciary Tool(k)it, Sales Enablement Resources) preceded by the 'Drive growth' heading as section default content, columns (closing CTA, text-only, javascript:void(0) rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/cit-offerings parsers and transformers; adds no new blocks.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "cards",
+          "instances": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_3"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro and Value Prop",
+          "selector": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Features",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "cards"
+          ],
+          "defaultContent": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_2 .et_pb_text_inner"
+          ],
+          "hint": "block"
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "about-us",
+      "urls": [
+        "https://www.broadridge.com/cit/about-us"
+      ],
+      "coverageGaps": [],
+      "description": "CIT About Us page (Matrix Trust Company): hero-banner, intro default content (Colorado charter / 50+ yrs / SSAE18 prose, demoted from a Divi <h3>; leading hidden '-' spacer heading dropped), value-prop default content ('A partner that can help you grow your business.' heading demoted from a second page <h1> to <h2>, plus two body paragraphs), a 12-item solutions bulleted list as default content (<ul> with an 'Our range of solutions include:' lead-in), columns (closing CTA, text-only, TALK TO US rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome (footer 'Ready for Next' branding removed by cleanup). The closing CTA (section.CTA-line) is a child of #page-container (sibling of #main-content), like cit-landing. Reuses the cit-landing/cit-offerings parsers and transformers; adds no new blocks and has no cards on this page.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#page-container > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro",
+          "selector": [
+            "#main-content > div.et_pb_section_1.welcomeSection"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            ".welcomeSection .et_pb_row_0 .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Value Proposition and Solutions",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            ".et_pb_section_2 .et_pb_row .et_pb_text_inner",
+            ".et_pb_section_2 .et_pb_row_2 .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#page-container > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "banks-and-trusts",
+      "urls": [
+        "https://www.broadridge.com/cit/banks-and-trusts"
+      ],
+      "coverageGaps": [],
+      "description": "CIT Banks & Trusts page: hero-banner, intro/value-prop default content (value-prop paragraph + 'Reduce the risk' heading + diagram image), trading-solutions default content ('Step up to customer demands' heading demoted from a second page <h1>, 'A comprehensive suite' lead-in, and a 5-item feature bulleted list: ModelTool(k)it, Mutual Fund Trading Platform, ETF Trading Platform, Money Market Portal, IRA solutions), columns (closing CTA, text-only, '#'/javascript:void(0) rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/cit-offerings parsers and transformers; adds no new blocks and has no cards on this page.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro and Value Prop",
+          "selector": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Trading Solutions",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_2 .et_pb_text_inner",
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_4 .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "tpas-and-record-keepers",
+      "urls": [
+        "https://www.broadridge.com/cit/tpas-and-record-keepers"
+      ],
+      "coverageGaps": [],
+      "description": "CIT TPAs & Recordkeepers page: hero-banner (H1 'TPAs & Recordkeepers' + subhead 'Save time and resources while increasing accuracy'), intro/value-prop default content (paragraphs demoted from Divi <h3>: regulatory changes/shrinking margins, the automated mutual fund + ETF TrueOpen trading platform with 30,000+ funds; the 'Eliminate the task…' callout heading; and the process-flow diagram image), services default content ('Satisfy the growing demand of customers.' heading demoted from a second page <h1> to <h2>, a short prose line, and an 8-item plain bulleted service list authored as <li><h3> flattened to list text across two half-columns: ModelTool(k)it, Mutual Fund Trading Platform, ETF Trading Platform, Trust and Custody, SDBAs Assets Held Away and Managed Accounts, Unitization Services, Level Compensation & RIA Payment Services, Sales Enablement), columns (closing CTA, text-only, '#'/javascript:void(0) rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/broker-dealer-platform parsers and transformers; adds no new blocks and has no cards on this page.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro and Value Prop",
+          "selector": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Services",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "financial-advisers",
+      "urls": [
+        "https://www.broadridge.com/cit/financial-advisers"
+      ],
+      "coverageGaps": [],
+      "description": "CIT Financial Advisers page: hero-banner (H1 'Financial Advisers' + subhead 'Stand out from your competitors'), intro/value-prop default content (TrueOpen Platform prose + 'Attract new prospects and remain the main point of contact.' heading + process-flow diagram image, all in the div[style*=27px] intro band), section-2 default content ('Satisfy the growing demand of customers.' heading demoted from a second page <h1>, plus the 'Our solution provides…' value prop) ABOVE a genuine two-column solutions list rendered as a BASE columns block (LEFT: ModelTool(k)it, Unitized Managed Accounts, Collective Investment Trusts, Sales Enablement, Level Compensation & RIA Payment Services | RIGHT: Data Feeds, Mutual Fund Trading Platform, ETF Trading Platform, Trust and Custody). The solutions list has NO is/is-not semantics (no .checks/.exes classes, no 'are:'/'are not:' headings) so the columns parser emits Columns, NOT Columns (compare). Closing CTA columns (text-only, TALK TO US rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/broker-dealer parsers and transformers; adds no new blocks.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_4",
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Intro and Value Prop",
+          "selector": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div[style*=\"27px\"]"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Solutions",
+          "selector": [
+            "#main-content > div.et_pb_section_2"
+          ],
+          "style": "light-grey",
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [
+            "#main-content > div.et_pb_section_2 > div.et_pb_row_2 .et_pb_text_inner"
+          ],
+          "hint": "block"
+        },
+        {
+          "id": "s4",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "fund-detail",
+      "urls": [
+        "https://www.broadridge.com/cit/mutual-of-america-stable-value-cit",
+        "https://www.broadridge.com/cit/equity-armor-cits",
+        "https://www.broadridge.com/cit/goalpath-portfolios"
+      ],
+      "coverageGaps": [],
+      "description": "CIT fund-detail page (reusable across the ~23 Matrix Trust Company fund pages): hero-banner (H1 = fund family name + optional subhead), risk-disclaimer NOTE default content (relocated out of the hero into div.fund-note), fund overview + flat document-link list default content (section.divided-welcome: <h3>-wrapped description paragraphs unwrapped to <p>; .right-side <ul> flattened to clean links, empty spacer <li>s dropped, hrefs preserved verbatim), optional grouped/nested per-fund-series document lists default content (section.blue-prints: <h2> group heading + nested <ul>, consolidated into one section — GoalPath has two groups of 15), optional subadvisor band default content (div.et_pb_section_1.welcomeSection: <h1> demoted to <h2>, blurb unwrapped, onclick popup link promoted to a real href), columns (closing CTA, text-only, #/javascript:void(0) rewritten to #talk-to-us), form-contact (Talk to Us modal relocated to end). Shared header nav and footer chrome. Reuses the cit-landing/cit-services parsers and transformers; adds no new blocks and has no cards. All fund-specific normalization lives in the SHARED broadridge-cleanup transformer, guarded on section.divided-welcome (absent on all other CIT pages, so it is a strict no-op there).",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        },
+        {
+          "name": "columns",
+          "instances": [
+            "#main-content > section.CTA-line > div.CTA-cover",
+            "section.CTA-line div.CTA-cover"
+          ]
+        },
+        {
+          "name": "form-contact",
+          "instances": [
+            "#talk-to-us"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Disclaimer",
+          "selector": [
+            "#main-content > div.fund-note",
+            "div.fund-note"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            "div.fund-note"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s3",
+          "name": "Fund Overview and Documents",
+          "selector": [
+            "#main-content > section.divided-welcome",
+            "section.divided-welcome"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "section.divided-welcome .left-side",
+            "section.divided-welcome .right-side ul"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s4",
+          "name": "Fund Series Documents",
+          "selector": [
+            "#main-content > section.blue-prints",
+            "section.blue-prints"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "section.blue-prints"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s5",
+          "name": "Subadvisor",
+          "selector": [
+            "#main-content > div.et_pb_section_1.welcomeSection",
+            "div.et_pb_section_1.welcomeSection"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "div.et_pb_section_1.welcomeSection .et_pb_text_inner"
+          ],
+          "hint": "default-content"
+        },
+        {
+          "id": "s6",
+          "name": "Closing CTA",
+          "selector": [
+            "#main-content > section.CTA-line",
+            "section.CTA-line"
+          ],
+          "style": null,
+          "blocks": [
+            "columns"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        }
+      ]
+    },
+    {
+      "name": "legal",
+      "urls": [
+        "https://www.broadridge.com/cit/terms-and-conditions"
+      ],
+      "coverageGaps": [],
+      "description": "CIT legal page (Matrix Terms of Service): hero-banner (H1 'Matrix Terms of Service', background image, empty subhead), then the full Terms body as DEFAULT CONTENT — the opening acceptance statement, defined-terms paragraph, and ten legal sections (Hyperlinks to Third-Party Information and Value-Added Services; Matrix Company Does Not Provide Financial, Investment, Tax or Legal Advice on this Web Site; Arbitration and Governing Law Provisions [Denver, Colorado]; Acceptable Use; Security/Privacy; Disclosure of User Information; Downtime and Interruptions in Service; Termination; Modification; General Provisions) plus the closing CIT-risk paragraph with a /cit/matrix-cits link. Per David's Model this long legal document is NOT forced into blocks: only the hero is a block. The section headings are authored as bold-only paragraphs (<p><strong>Title</strong></p>) and promoted to <h2> by the legal-page normalization in broadridge-cleanup.js (guarded on div.et_pb_text_inner-conditions, a strict no-op on every other CIT page). No closing CTA (no section.CTA-line) and no Talk-to-Us form on this page — the shared #talk-to-us flyout chrome (a body-level sibling of #main-header, so not caught by header/footer removal) is removed by the guarded normalization. Shared header nav and footer chrome. Reuses the cit-landing hero-banner parser and the shared cleanup/sections transformers; adds no new blocks.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#main-content > section.et_pb_fullwidth_header_0",
+            "section.et_pb_fullwidth_header_0"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "s1",
+          "name": "Hero",
+          "selector": [
+            "#main-content > section.et_pb_fullwidth_header_0"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": [],
+          "hint": "block"
+        },
+        {
+          "id": "s2",
+          "name": "Terms of Service Body",
+          "selector": [
+            "#main-content > div.et_pb_section_1"
+          ],
+          "style": "light-grey",
+          "blocks": [],
+          "defaultContent": [
+            "#main-content > div.et_pb_section_1 div.et_pb_text_inner-conditions"
+          ],
+          "hint": "default-content"
+        }
+      ]
+    }
+  ]
+}

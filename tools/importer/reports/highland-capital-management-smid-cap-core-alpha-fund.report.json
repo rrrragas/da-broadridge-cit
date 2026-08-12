@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/highland-capital-management-smid-cap-core-alpha-fund",
+  "path": "highland-capital-management-smid-cap-core-alpha-fund",
+  "timestamp": "2026-08-12T05:42:55.989Z",
+  "title": "Highland Capital Management: SMID Cap Core Alpha Fund | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/financial-advisers",
+  "path": "financial-advisers",
+  "timestamp": "2026-08-12T05:42:34.106Z",
+  "title": "Financial Advisers | Broadridge",
+  "template": "financial-advisers",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "columns",
+    "form-contact"
+  ]
+}

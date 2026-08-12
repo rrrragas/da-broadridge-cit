@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/donaldson-sequoia-fund",
+  "path": "donaldson-sequoia-fund",
+  "timestamp": "2026-08-12T05:42:30.434Z",
+  "title": "Donaldson Sequoia Fund | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

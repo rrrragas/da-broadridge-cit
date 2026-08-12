@@ -1,0 +1,39 @@
+{
+  "variantName": "form-contact",
+  "baseBlock": "form",
+  "version": "1.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "middle"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "light",
+    "density": "compact",
+    "purpose": "lead-capture",
+    "imagePattern": "noimg"
+  },
+  "contentPattern": {
+    "structure": "heading + intro + [Full Name, Country select, Comments] + submit + support/FAQ + success state",
+    "buttonCount": 1,
+    "imageCount": 0
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "'Talk to Us' / contact-sales lead-capture forms",
+      "simple client-side contact forms with name/country/comments",
+      "forms needing an inline success ('Thank You') state and a support contact block"
+    ],
+    "notSuitableFor": [
+      "forms requiring server-side submission wiring (endpoint out of scope here)",
+      "AEM Adaptive Forms / complex multi-step forms"
+    ]
+  },
+  "notes": "New custom block: no vanilla 'form' template exists in the Block Collection and the forms-excat plugin/skill is not available in this environment. Built from scratch. Submission is client-side only; the source posts to a Broadridge endpoint (form id 3149) which is out of scope for this migration.",
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  }
+}

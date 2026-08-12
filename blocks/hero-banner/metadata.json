@@ -1,0 +1,37 @@
+{
+  "variantName": "hero-banner",
+  "baseBlock": "hero",
+  "version": "1.0.0",
+  "created": "2026-08-11T09:30:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.broadridge.com/cit/",
+    "originPage": "Collective Investment Trusts landing page",
+    "blockPosition": "top"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "dark",
+    "density": "spacious",
+    "purpose": "hero",
+    "imagePattern": "large"
+  },
+  "contentPattern": {
+    "structure": "background image + heading + subheading",
+    "buttonCount": 0,
+    "imageCount": 1
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "page-top banners with a full-bleed background photo",
+      "marketing landing page heroes with a title and subhead"
+    ],
+    "notSuitableFor": [
+      "heroes with a prominent call-to-action button",
+      "text-only intros without a background image"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/cit/index"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-11T09:30:00.000Z"
+  }
+}

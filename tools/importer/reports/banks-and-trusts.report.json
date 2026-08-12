@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/banks-and-trusts",
+  "path": "banks-and-trusts",
+  "timestamp": "2026-08-12T05:42:17.067Z",
+  "title": "Matrix Banks and Trusts | Broadridge",
+  "template": "banks-and-trusts",
+  "blocks": [
+    "hero-banner",
+    "columns",
+    "form-contact"
+  ]
+}

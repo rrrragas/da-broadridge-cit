@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "url": "https://www.broadridge.com/cit/starpath-funds",
+  "path": "starpath-funds",
+  "timestamp": "2026-08-12T05:44:01.972Z",
+  "title": "StarPath Funds | Broadridge",
+  "template": "fund-detail",
+  "blocks": [
+    "hero-banner",
+    "columns"
+  ]
+}
