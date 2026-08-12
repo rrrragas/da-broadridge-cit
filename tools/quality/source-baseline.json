@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "source": "https://www.broadridge.com/cit/",
+    "capturedFor": "visual-diff baseline — the source of truth the migrated blocks are diffed against",
+    "capturedAt": "2026-08-12",
+    "note": "Computed styles from the live source page. The visual-diff hook diffs the migrated render against these values with tolerance; accepted deviations live in visual-diff-allowlist.json. Recapture with: node tools/quality/broadridge-visual-diff.mjs --recapture (see script header)."
+  },
+  "global": {
+    "bodyFontFamily": "freightsans_probook",
+    "bodyColor": "rgb(22, 22, 29)",
+    "bodyFontSize": "16px"
+  },
+  "hero-banner": {
+    "selectorNote": "hero H1 + subhead over background image",
+    "h1": {
+      "fontSize": "72px",
+      "fontWeight": "200",
+      "lineHeight": "74px",
+      "color": "rgb(255, 255, 255)",
+      "textTransform": "none",
+      "letterSpacing": "-1.5px",
+      "fontFamily": "freightsans_prolight"
+    }
+  },
+  "cards": {
+    "variant": "feature",
+    "tileBg": "rgb(0, 80, 174)",
+    "tilePadding": "24px 55px 24px 36px",
+    "title": {
+      "fontSize": "18px",
+      "fontWeight": "500",
+      "lineHeight": "30.6px",
+      "color": "rgb(255, 255, 255)",
+      "textTransform": "none",
+      "letterSpacing": "normal",
+      "fontFamily": "freightsans_probook"
+    }
+  },
+  "columns": {
+    "variant": "compare",
+    "compareHeading": {
+      "fontSize": "21px",
+      "fontWeight": "300",
+      "lineHeight": "33.6px",
+      "color": "rgb(22, 22, 29)",
+      "textTransform": "none",
+      "letterSpacing": "normal"
+    },
+    "checkGlyphNote": "positive list = green check, negative list = red cross, rendered as CSS ::before bullets"
+  },
+  "form-contact": {
+    "submitBtn": {
+      "backgroundColor": "rgb(0, 80, 174)",
+      "borderRadius": "2px",
+      "padding": "15px 27px",
+      "color": "rgb(255, 255, 255)",
+      "fontFamily": "freightsans_prosemibold",
+      "fontWeight": "700"
+    }
+  },
+  "footer": {
+    "bg": "rgb(0, 31, 90)",
+    "heading": {
+      "fontSize": "22px",
+      "fontWeight": "500",
+      "lineHeight": "22px",
+      "color": "rgb(255, 255, 255)",
+      "textTransform": "none",
+      "letterSpacing": "normal",
+      "fontFamily": "freightsans_probook"
+    },
+    "linkColor": "rgb(255, 255, 255)"
+  },
+  "sections": {
+    "welcome": { "backgroundColor": "rgb(235, 238, 242)" },
+    "characteristics": { "backgroundColor": "rgb(240, 242, 246)" },
+    "cta": { "backgroundColor": "rgb(235, 238, 242)" }
+  }
+}

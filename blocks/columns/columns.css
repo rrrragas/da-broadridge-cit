@@ -13,6 +13,18 @@
 }
 
 /* ---- compare variant: comparison lists with icon bullets ---- */
+
+/* source renders the "CITs are:" / "CITs are not:" headings small (~21px),
+   not the large global h3 — scope a matching size to the compare variant */
+.columns.compare h1,
+.columns.compare h2,
+.columns.compare h3,
+.columns.compare h4 {
+  font-size: var(--heading-font-size-s);
+  font-weight: var(--heading-font-weight);
+  margin-bottom: 0.5em;
+}
+
 .columns.compare ul {
   list-style: none;
   margin: 0;
