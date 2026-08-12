@@ -58,14 +58,13 @@ differs. Add pages as they migrate:
 ```bash
 aem up      # serve your branch at http://localhost:3000 (the "after")
 
-# full page, regression
-npm run broadridge:test:visual -- --scope fullpage --path /cit
+# everything (all enabled combos on every config target) — the usual one:
+npm run broadridge:visual:all
 
-# one block, regression
-npm run broadridge:test:visual -- --scope block --block hero-banner --path /cit
-
-# migration parity (before = legacy site from config.parityBase)
-npm run broadridge:test:visual -- --mode parity --scope block --block hero-banner --base-selector ".legacy-hero" --path /cit
+# or a single combo:
+npm run broadridge:test:visual -- --scope fullpage --path /cit                 # regression, full page
+npm run broadridge:test:visual -- --scope block --path /cit                    # regression, hero block
+npm run broadridge:test:visual -- --mode parity --scope block --path /cit      # parity, hero block
 ```
 
 ### The inputs (flags)
