@@ -43,31 +43,41 @@ checks at all. These toggles are **CI-only**; a local `--mode`/`--scope` always 
 - **In CI:** the matrix builds BEFORE/AFTER from the PR description's `before=`/`live=`/`after=` URLs (per page);
   regression+fullpage falls back to `main` live vs the branch preview. `threshold`/`viewports` come from the config.
 
-### Per-page overrides (when legacy paths differ)
+## Two files: domains vs pages
 
-If a legacy URL doesn't share the new EDS path, give the target its own full `base` (and/or `candidate`) URL:
+The two config files have a clean split:
 
-```json
-[
-  { "path": "/cit", "viewports": ["mobile", "tablet", "desktop"] },
-  { "path": "/cit/hero", "base": "https://www.legacy-cit-site.com/investor/hero.html" }
-]
-```
-
-`/cit/hero`'s "before" is the explicit legacy URL; its "after" is `<candidate>/cit/hero`. Targets without a
-`base` fall back to `<--base origin> + path` as usual.
+- **`broadridge-visual.config.json` — domains + global defaults only.** The three origins
+  (`regressionBase`, `parityBase`, `localCandidate`), plus `threshold`, `viewports`, and the CI `checks`
+  toggles. **No page paths here.**
+- **`broadridge-visual-targets.json` — the pages.** Per-page **paths** and **block-level selectors**. The tool
+  joins `<config origin> + <target path>`, so you never repeat a domain here.
 
 ## Targets — `tools/quality/broadridge-visual-targets.json`
 
+Each entry is one page. Fields:
+
+| Field | Side | Meaning |
+|---|---|---|
+| `path` | destination (+ regression source) | the EDS path, e.g. `/cit` — appended to `localCandidate` and `regressionBase` |
+| `legacyPath` | parity source | *optional* — the legacy path if it differs from `path` (appended to `parityBase`); defaults to `path` |
+| `block` | destination (EDS) | EDS block name → `.block`, e.g. `hero-banner` |
+| `selector` | destination (EDS) | *optional* raw CSS instead of `block` |
+| `baseSelector` | parity source (legacy) | the legacy element's CSS, e.g. `.et_pb_fullwidth_header` |
+| `viewports` | — | *optional* override of the config viewports |
+| `base` / `candidate` | — | *optional* full-URL escape hatch (reintroduces a domain — avoid unless a page truly needs it) |
+
+Example (CIT — EDS and legacy share the `/cit` route, so no `legacyPath` needed):
+
 ```json
 [
-  { "path": "/", "viewports": ["mobile", "tablet", "desktop"] }
+  { "path": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header",
+    "viewports": ["mobile", "tablet", "desktop"] }
 ]
 ```
 
-Seeded with `/`. **Add each migrated page path** here — ideally the homepage plus one representative page per
-template (article, product/PLP, contact, etc.) as they migrate. A path must exist on **both** base and candidate
-to be compared; otherwise it's **skipped with a warning** (never a crash), which is expected mid-migration.
+**Add each migrated page** here as you go — e.g. `{ "path": "/cit/products", "block": "cards" }`. A page must
+resolve on **both** sides or it's **skipped with a warning** (never a crash) — expected mid-migration.
 
 ## Run it locally (pre-check)
 

@@ -142,11 +142,12 @@ try {
       const vp = VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }
       const label = `${target.path} @ ${vpName}`;
-      // Per-target full-URL overrides support migration parity, where the legacy/source page lives
-      // at a different path/origin than the new EDS page — e.g.
-      //   { "path": "/cit/hero", "base": "https://legacy.example.com/investor/hero.html" }
-      // compares the legacy hero against <candidate>/cit/hero. Falls back to <origin> + path.
-      const baseUrl = target.base || (base ? stripTrailing(base) + target.path : null);
+      // Domains come from the config (regressionBase/parityBase/localCandidate); the target supplies
+      // the PATHS. Destination (candidate) uses `path`; source (base) uses `path` too, unless the legacy
+      // page lives at a different route — then set `legacyPath` (used for the parity source only).
+      // A full-URL `base`/`candidate` on the target still overrides everything if ever needed.
+      const srcPath = (mode === 'parity' && target.legacyPath) ? target.legacyPath : target.path;
+      const baseUrl = target.base || (base ? stripTrailing(base) + srcPath : null);
       const candUrl = target.candidate || (candidate ? stripTrailing(candidate) + target.path : null);
       if (!baseUrl || !candUrl) {
         rows.push({ label, status: 'skipped', detail: 'no base/candidate URL' });
