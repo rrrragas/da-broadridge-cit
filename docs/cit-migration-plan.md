@@ -189,13 +189,13 @@ Three verification passes were run. The prior artifact had two material errors a
 - [x] Migrate `/cit/about-us` (hero + intro + value-prop + 12-item list as default content + columns CTA + form).
 - [x] All 8 core pages verified: lean block palette (`hero-banner`, `cards` feature/offerings, `columns` base/compare, `form-contact`); bulleted lists kept as default content per David's Model; lint clean. *(Commit local; push pending a transient credential retry.)*
 
-### Phase 5 — Fund detail pages (M5)
-- [ ] Build bulk import infrastructure (parser/transformer) for the fund-detail template.
-- [ ] Enumerate the full fund-page URL list (re-count vs. the 22 grid links).
-- [ ] Bulk-import ~22 fund pages; QA each against source.
-- [ ] Download/optimize fund-page assets; add alt text.
-- [ ] (Optional) Migrate `/cit/terms-and-conditions` (long legal text).
-- [ ] Verify all internal `/cit/...` links (nav, footer, grid → fund pages) resolve; keep social/external links absolute.
+### Phase 5 — Fund detail pages (M5) — ✅ complete
+- [x] Build the `fund-detail` template; validate on 3 diverse samples (simple flat list, multi-strategy, goalpath nested groups) — confirmed homogeneous, no new blocks needed.
+- [x] Enumerate the full fund-page URL list — **23 funds** (re-counted from the matrix-cits grid; one more than the earlier "22" estimate).
+- [x] Bulk-import all **23 fund pages (23/23 success)**: hero + fund description + PDF document links (flat or nested-by-series, all preserved — goalpath = 35 PDFs) + disclaimer + columns CTA + form-contact. Kept as default content per David's Model.
+- [x] (Optional) Migrate `/cit/terms-and-conditions` — long legal doc as default content (30/30 paragraphs, `legal` template).
+- [x] Verify internal linking: **all 23 matrix-cits tile links resolve to imported fund pages** (0 missing); social/external links kept absolute.
+- [ ] Image optimization/local hosting handled at DA publish time (source URLs preserved for now).
 
 ### Phase 6 — QA, performance & delivery (M6)
 - [ ] Verify heading hierarchy, ARIA, alt text, WCAG 2.1 AA across all pages.
