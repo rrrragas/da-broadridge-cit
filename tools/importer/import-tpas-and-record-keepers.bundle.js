@@ -250,6 +250,19 @@ var CustomImportScript = (() => {
       element.replaceWith(block2);
       return;
     }
+    const imageCols = columns.filter((c) => c.querySelector("img[src]"));
+    const textOnlyCols = columns.filter((c) => !c.querySelector("img[src]"));
+    if (columns.length >= 2 && imageCols.length === 0 && textOnlyCols.length >= 2) {
+      const row = textOnlyCols.map((col) => {
+        const cell = collectTextColumn(col, document2);
+        return cell.length ? cell : "";
+      });
+      if (row.some((c) => c && c.length)) {
+        const block2 = WebImporter.Blocks.createBlock(document2, { name: "Columns", cells: [row] });
+        element.replaceWith(block2);
+        return;
+      }
+    }
     const textCell = [];
     let imageEl = null;
     if (columns.length) {
@@ -275,6 +288,127 @@ var CustomImportScript = (() => {
 
   // tools/importer/transformers/broadridge-cleanup.js
   var TransformHook = { beforeTransform: "beforeTransform", afterTransform: "afterTransform" };
+  function cleanLinkLabel(a) {
+    const clone = a.cloneNode(true);
+    clone.querySelectorAll('[style*="display"]').forEach((n) => {
+      if (/display\s*:\s*none/i.test(n.getAttribute("style") || "")) n.remove();
+    });
+    return (clone.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  function buildLinkList(anchors, doc) {
+    const ul = doc.createElement("ul");
+    anchors.forEach((a) => {
+      const href = a.getAttribute("href");
+      if (!href) return;
+      const label = cleanLinkLabel(a);
+      if (!label) return;
+      const na = doc.createElement("a");
+      na.setAttribute("href", href);
+      na.textContent = label;
+      const li = doc.createElement("li");
+      li.appendChild(na);
+      ul.appendChild(li);
+    });
+    return ul.children.length ? ul : null;
+  }
+  function normalizeFundPage(element) {
+    const dividedWelcome = element.querySelector("section.divided-welcome");
+    if (!dividedWelcome) return;
+    const doc = element.ownerDocument;
+    const hero = element.querySelector("section.et_pb_fullwidth_header_0");
+    const noteBand = hero && hero.querySelector(".et_pb_fullwidth_header_scroll");
+    if (hero && noteBand) {
+      const noteWrap = doc.createElement("div");
+      noteWrap.className = "fund-note";
+      noteBand.querySelectorAll("p").forEach((p) => {
+        if (!(p.textContent || "").replace(/\s+/g, " ").trim()) return;
+        const np = doc.createElement("p");
+        np.innerHTML = p.innerHTML;
+        noteWrap.appendChild(np);
+      });
+      if (noteWrap.children.length) hero.after(noteWrap);
+      noteBand.remove();
+    }
+    const subLink = dividedWelcome.parentElement && dividedWelcome.parentElement.querySelector("div.et_pb_section_1.welcomeSection a[onclick]");
+    if (subLink && !subLink.getAttribute("href")) {
+      const popupLink = element.querySelector('#disclaimer-notice a[href^="http"]');
+      if (popupLink) subLink.setAttribute("href", popupLink.getAttribute("href"));
+      subLink.removeAttribute("onclick");
+    }
+    const descScopes = [
+      ...dividedWelcome.querySelectorAll(".left-side h1, .left-side h2, .left-side h3, .left-side h4")
+    ];
+    const subSection = dividedWelcome.parentElement && dividedWelcome.parentElement.querySelector("div.et_pb_section_1.welcomeSection");
+    if (subSection) {
+      descScopes.push(...subSection.querySelectorAll("h3, h4"));
+    }
+    descScopes.forEach((h) => {
+      if (!h.querySelector("p")) return;
+      const frag = doc.createDocumentFragment();
+      [...h.children].filter((c) => c.tagName === "P").forEach((p) => {
+        if (!(p.textContent || "").replace(/\s+/g, " ").trim()) return;
+        const np = doc.createElement("p");
+        np.innerHTML = p.innerHTML;
+        frag.appendChild(np);
+      });
+      if (frag.childNodes.length) h.replaceWith(frag);
+      else h.remove();
+    });
+    dividedWelcome.querySelectorAll(".right-side ul").forEach((ul) => {
+      const anchors = [...ul.querySelectorAll(":scope > li a[href]")];
+      const newUl = buildLinkList(anchors, doc);
+      if (newUl) ul.replaceWith(newUl);
+      else ul.remove();
+    });
+    dividedWelcome.querySelectorAll(".right-side small").forEach((s) => {
+      if (!(s.textContent || "").trim()) s.remove();
+    });
+    const blueprintSecs = [...element.querySelectorAll("section.blue-prints")];
+    if (blueprintSecs.length) {
+      const target = blueprintSecs[0];
+      blueprintSecs.forEach((sec) => {
+        const container = sec.querySelector(".blue-prints-container") || sec;
+        const heading = container.querySelector("h1, h2, h3, h4, h5, h6");
+        const anchors = [...sec.querySelectorAll(".blueprint-links a[href]")];
+        const frag = doc.createDocumentFragment();
+        if (heading) {
+          const text = (heading.textContent || "").replace(/\s+/g, " ").trim();
+          if (text) {
+            const h = doc.createElement("h2");
+            h.textContent = text;
+            frag.appendChild(h);
+          }
+        }
+        const ul = buildLinkList(anchors, doc);
+        if (ul) frag.appendChild(ul);
+        if (sec === target) {
+          sec.innerHTML = "";
+          sec.appendChild(frag);
+        } else {
+          target.appendChild(frag);
+          sec.remove();
+        }
+      });
+    }
+  }
+  function normalizeLegalPage(element) {
+    const conditions = element.querySelector("div.et_pb_text_inner-conditions");
+    if (!conditions) return;
+    const doc = element.ownerDocument;
+    WebImporter.DOMUtils.remove(element, ["#talk-to-us"]);
+    [...conditions.querySelectorAll(":scope > p")].forEach((p) => {
+      if (!p.querySelector("strong")) return;
+      const clone = p.cloneNode(true);
+      clone.querySelectorAll("strong").forEach((s) => s.remove());
+      const outside = (clone.textContent || "").replace(/\s+/g, " ").trim();
+      if (outside !== "") return;
+      const text = (p.textContent || "").replace(/\s+/g, " ").trim();
+      if (!text) return;
+      const h = doc.createElement("h2");
+      h.textContent = text;
+      p.replaceWith(h);
+    });
+  }
   function transform(hookName, element, payload) {
     if (hookName === TransformHook.beforeTransform) {
       WebImporter.DOMUtils.remove(element, [
@@ -282,6 +416,8 @@ var CustomImportScript = (() => {
         "#onetrust-banner-sdk",
         "#ot-sdk-btn-floating"
       ]);
+      normalizeFundPage(element);
+      normalizeLegalPage(element);
     }
     if (hookName === TransformHook.afterTransform) {
       WebImporter.DOMUtils.remove(element, [
@@ -376,6 +512,19 @@ var CustomImportScript = (() => {
           const p = element.ownerDocument.createElement("p");
           p.innerHTML = h.innerHTML;
           h.replaceWith(p);
+        }
+      });
+      const headings = [...element.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+      const stack = [];
+      headings.forEach((h) => {
+        const src = Number(h.tagName[1]);
+        while (stack.length && stack[stack.length - 1].src >= src) stack.pop();
+        const out = Math.min(stack.length ? stack[stack.length - 1].out + 1 : 1, 6);
+        stack.push({ src, out });
+        if (out !== src) {
+          const nh = element.ownerDocument.createElement(`h${out}`);
+          nh.innerHTML = h.innerHTML;
+          h.replaceWith(nh);
         }
       });
     }

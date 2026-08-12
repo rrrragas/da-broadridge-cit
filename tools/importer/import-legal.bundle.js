@@ -309,6 +309,19 @@ var CustomImportScript = (() => {
           h.replaceWith(p);
         }
       });
+      const headings = [...element.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+      const stack = [];
+      headings.forEach((h) => {
+        const src = Number(h.tagName[1]);
+        while (stack.length && stack[stack.length - 1].src >= src) stack.pop();
+        const out = Math.min(stack.length ? stack[stack.length - 1].out + 1 : 1, 6);
+        stack.push({ src, out });
+        if (out !== src) {
+          const nh = element.ownerDocument.createElement(`h${out}`);
+          nh.innerHTML = h.innerHTML;
+          h.replaceWith(nh);
+        }
+      });
     }
   }
 

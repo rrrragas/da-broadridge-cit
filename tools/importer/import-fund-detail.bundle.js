@@ -391,6 +391,24 @@ var CustomImportScript = (() => {
       });
     }
   }
+  function normalizeLegalPage(element) {
+    const conditions = element.querySelector("div.et_pb_text_inner-conditions");
+    if (!conditions) return;
+    const doc = element.ownerDocument;
+    WebImporter.DOMUtils.remove(element, ["#talk-to-us"]);
+    [...conditions.querySelectorAll(":scope > p")].forEach((p) => {
+      if (!p.querySelector("strong")) return;
+      const clone = p.cloneNode(true);
+      clone.querySelectorAll("strong").forEach((s) => s.remove());
+      const outside = (clone.textContent || "").replace(/\s+/g, " ").trim();
+      if (outside !== "") return;
+      const text = (p.textContent || "").replace(/\s+/g, " ").trim();
+      if (!text) return;
+      const h = doc.createElement("h2");
+      h.textContent = text;
+      p.replaceWith(h);
+    });
+  }
   function transform(hookName, element, payload) {
     if (hookName === TransformHook.beforeTransform) {
       WebImporter.DOMUtils.remove(element, [
@@ -399,6 +417,7 @@ var CustomImportScript = (() => {
         "#ot-sdk-btn-floating"
       ]);
       normalizeFundPage(element);
+      normalizeLegalPage(element);
     }
     if (hookName === TransformHook.afterTransform) {
       WebImporter.DOMUtils.remove(element, [
@@ -493,6 +512,19 @@ var CustomImportScript = (() => {
           const p = element.ownerDocument.createElement("p");
           p.innerHTML = h.innerHTML;
           h.replaceWith(p);
+        }
+      });
+      const headings = [...element.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+      const stack = [];
+      headings.forEach((h) => {
+        const src = Number(h.tagName[1]);
+        while (stack.length && stack[stack.length - 1].src >= src) stack.pop();
+        const out = Math.min(stack.length ? stack[stack.length - 1].out + 1 : 1, 6);
+        stack.push({ src, out });
+        if (out !== src) {
+          const nh = element.ownerDocument.createElement(`h${out}`);
+          nh.innerHTML = h.innerHTML;
+          h.replaceWith(nh);
         }
       });
     }

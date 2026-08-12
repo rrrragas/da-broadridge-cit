@@ -417,5 +417,28 @@ export default function transform(hookName, element, payload) {
         h.replaceWith(p);
       }
     });
+
+    // Heading-hierarchy normalization (WCAG 1.3.1 / best practice). The Divi
+    // source sizes headings visually, so card/list titles are authored as <h3>
+    // or <h5> directly under the hero <h1>, producing level SKIPS (h1 -> h3,
+    // h2 -> h5). Renumber the whole heading tree with a stack so levels are
+    // contiguous (no skips) AND sibling headings share the same level (all cards
+    // in a grid stay peers). Standard depth-compaction: each heading's output
+    // level = (output level of the nearest shallower ancestor) + 1; equal-or-
+    // deeper entries are popped first so repeated siblings map identically.
+    // Runs last so it also fixes headings inside already-parsed block tables.
+    const headings = [...element.querySelectorAll('h1, h2, h3, h4, h5, h6')];
+    const stack = []; // entries: { src, out }
+    headings.forEach((h) => {
+      const src = Number(h.tagName[1]);
+      while (stack.length && stack[stack.length - 1].src >= src) stack.pop();
+      const out = Math.min(stack.length ? stack[stack.length - 1].out + 1 : 1, 6);
+      stack.push({ src, out });
+      if (out !== src) {
+        const nh = element.ownerDocument.createElement(`h${out}`);
+        nh.innerHTML = h.innerHTML; // preserve inner markup (links, <sup>, etc.)
+        h.replaceWith(nh);
+      }
+    });
   }
 }
