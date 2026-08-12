@@ -16,7 +16,8 @@
   },
   "targets": [
     {
-      "path": "/cit",
+      "edsPath": "/cit",
+      "livePath": "/cit",
       "block": "hero-banner",
       "baseSelector": ".et_pb_fullwidth_header"
     }

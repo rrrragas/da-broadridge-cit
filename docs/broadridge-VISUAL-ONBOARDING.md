@@ -33,13 +33,14 @@ Project defaults (which URLs, sensitivity, screen sizes) live in
   "viewports": ["mobile", "tablet", "desktop"],
   "checks": { "regression": true, "parity": true, "fullpage": true, "block": true },
   "targets": [
-    { "path": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
+    { "edsPath": "/cit", "livePath": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
   ]
 }
 ```
 
-`targets` is the list of **pages** to check — one entry per page (path + block selector). Add pages as they
-migrate: `{ "path": "/cit/products", "block": "cards" }`.
+`targets` is the list of **pages** — one entry per page. `edsPath` = the EDS page, `livePath` = the live/legacy
+page (set it only if the route differs; else it defaults to `edsPath`). Add pages as they migrate:
+`{ "edsPath": "/cit/products", "livePath": "/products", "block": "cards" }`.
 
 `checks` are **CI on/off toggles** — the PR runs enabled *sources* (regression/parity) × enabled *scopes*
 (fullpage/block). Turn `parity` off until migration starts, or `block` off early on. (Local commands ignore these.)

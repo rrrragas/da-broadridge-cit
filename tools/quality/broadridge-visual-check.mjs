@@ -89,7 +89,7 @@ if (manifestPath) {
   console.error(`No pages to check — add a "targets" array to ${configPath} (or pass --manifest).`);
   process.exit(reportOnly ? 0 : 1);
 }
-if (onlyPath) manifest = manifest.filter((t) => t.path === onlyPath);
+if (onlyPath) manifest = manifest.filter((t) => (t.edsPath || t.path) === onlyPath);
 if (!manifest.length) { console.error('No targets to check.'); process.exit(reportOnly ? 0 : 1); }
 
 mkdirSync(outDir, { recursive: true });
@@ -143,19 +143,20 @@ const rows = [];
 const browser = await chromium.launch();
 try {
   for (const target of manifest) {
+    // Domains come from the config; the target supplies the PATHS. `edsPath` = the page on the EDS site
+    // (destination + regression source); `livePath` = the page on the live/legacy site (parity source),
+    // defaulting to edsPath when they match. (`path`/`legacyPath` accepted as aliases; CI passes full URLs.)
+    const edsPath = target.edsPath || target.path;
+    const livePath = target.livePath || target.legacyPath || edsPath;
     const cfgVps = Array.isArray(config.viewports) && config.viewports.length ? config.viewports : Object.keys(VIEWPORTS);
     const vps = (target.viewports && target.viewports.length ? target.viewports : cfgVps);
     for (const vpName of vps) {
       const vp = VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }
-      const label = `${target.path} @ ${vpName}`;
-      // Domains come from the config (regressionBase/parityBase/localCandidate); the target supplies
-      // the PATHS. Destination (candidate) uses `path`; source (base) uses `path` too, unless the legacy
-      // page lives at a different route — then set `legacyPath` (used for the parity source only).
-      // A full-URL `base`/`candidate` on the target still overrides everything if ever needed.
-      const srcPath = (mode === 'parity' && target.legacyPath) ? target.legacyPath : target.path;
+      const label = `${edsPath} @ ${vpName}`;
+      const srcPath = (mode === 'parity') ? livePath : edsPath; // base side path
       const baseUrl = target.base || (base ? stripTrailing(base) + srcPath : null);
-      const candUrl = target.candidate || (candidate ? stripTrailing(candidate) + target.path : null);
+      const candUrl = target.candidate || (candidate ? stripTrailing(candidate) + edsPath : null);
       if (!baseUrl || !candUrl) {
         rows.push({ label, status: 'skipped', detail: 'no base/candidate URL' });
         console.warn(`⚠ ${label} — skipped (no base/candidate URL — set --base/--candidate or target.base/candidate)`);
@@ -196,12 +197,12 @@ try {
       const diff = new PNG({ width: W, height: H });
       const changed = pixelmatch(bp.data, cp.data, diff.data, W, H, { threshold: 0.1, includeAA: false });
       const ratio = changed / (W * H);
-      const stem = join(outDir, `${slug(target.path)}-${vpName}`);
+      const stem = join(outDir, `${slug(edsPath)}-${vpName}`);
       writeFileSync(`${stem}-before.png`, PNG.sync.write(bp));
       writeFileSync(`${stem}-after.png`, PNG.sync.write(cp));
       writeFileSync(`${stem}-diff.png`, PNG.sync.write(diff));
       const status = ratio > threshold ? 'CHANGED' : 'ok';
-      rows.push({ label, status, ratio, files: `${slug(target.path)}-${vpName}-{before,after,diff}.png` });
+      rows.push({ label, status, ratio, files: `${slug(edsPath)}-${vpName}-{before,after,diff}.png` });
       console.log(`${status === 'CHANGED' ? '✗' : '✓'} ${label} — ${(ratio * 100).toFixed(3)}% diff`);
     }
   }

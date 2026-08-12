@@ -59,19 +59,21 @@ Fields:
 
 | Field | Side | Meaning |
 |---|---|---|
-| `path` | destination (+ regression source) | the EDS path, e.g. `/cit` — appended to `localCandidate` and `regressionBase` |
-| `legacyPath` | parity source | *optional* — the legacy path if it differs from `path` (appended to `parityBase`); defaults to `path` |
-| `block` | destination (EDS) | EDS block name → `.block`, e.g. `hero-banner` |
-| `selector` | destination (EDS) | *optional* raw CSS instead of `block` |
-| `baseSelector` | parity source (legacy) | the legacy element's CSS, e.g. `.et_pb_fullwidth_header` |
+| `edsPath` | EDS page (candidate + regression source) | the EDS path, e.g. `/cit` — appended to `localCandidate`/branch and `regressionBase` |
+| `livePath` | live/legacy page (parity source) | the live-site path, e.g. `/cit` — appended to `parityBase`. Set it only if it **differs** from `edsPath` (defaults to `edsPath`) |
+| `block` | EDS side | EDS block name → `.block`, e.g. `hero-banner` |
+| `selector` | EDS side | *optional* raw CSS instead of `block` |
+| `baseSelector` | live/legacy side | the legacy element's CSS, e.g. `.et_pb_fullwidth_header` |
 | `viewports` | — | *optional* override of the config viewports |
 | `base` / `candidate` | — | *optional* full-URL escape hatch (reintroduces a domain — avoid unless a page truly needs it) |
 
-Example (CIT — EDS and legacy share the `/cit` route, so no `legacyPath` needed):
+> `path`/`legacyPath` are accepted as aliases for `edsPath`/`livePath`.
+
+Example (CIT — the EDS and live pages share the `/cit` route here; set `livePath` differently when they don't):
 
 ```json
 "targets": [
-  { "path": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
+  { "edsPath": "/cit", "livePath": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
 ]
 ```
 
