@@ -7,7 +7,8 @@
       "Bash(npm run broadridge:check:breakpoints)",
       "Bash(npm run broadridge:check:svg)",
       "Bash(npm run broadridge:check:colors)",
-      "Bash(npm run broadridge:check:visual)",
+      "Bash(npm run broadridge:test:visual)",
+      "Bash(npm run broadridge:visual:all)",
       "Bash(node tools/quality/*)",
       "Bash(git status)",
       "Bash(git diff:*)",
@@ -22,10 +23,6 @@
           {
             "type": "command",
             "command": "node tools/quality/broadridge-breakpoint-check.mjs 1>/dev/null"
-          },
-          {
-            "type": "command",
-            "command": "case \"$CLAUDE_TOOL_PATHS\" in *blocks/*|*styles/*.css) node tools/quality/broadridge-visual-diff.mjs ;; esac"
           }
         ]
       }
