@@ -49,7 +49,12 @@ for (const raw of lines) {
   const after = fields.after;
   const beforeUrl = mode === 'parity' ? fields.live : fields.before;
   if (!after || !beforeUrl) continue; // this line can't feed this mode
-  entries.push({ path: name || slugFrom(after), base: beforeUrl, candidate: after });
+  const entry = { path: name || slugFrom(after), base: beforeUrl, candidate: after };
+  // block-scope hints (ignored by the fullpage scope): block name → `.class`, or raw selectors.
+  if (fields.block) entry.block = fields.block;
+  if (fields.selector) entry.selector = fields.selector;
+  if (fields['base-selector']) entry.baseSelector = fields['base-selector'];
+  entries.push(entry);
 }
 
 const json = JSON.stringify(entries, null, 2);

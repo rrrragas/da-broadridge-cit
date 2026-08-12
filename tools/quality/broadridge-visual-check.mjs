@@ -51,6 +51,10 @@ const outDir = arg('out', 'tools/quality/visual-output');
 const threshold = parseFloat(arg('threshold', '0.001'));
 const onlyPath = arg('path');
 const reportOnly = hasFlag('report-only');
+const scope = arg('scope', 'fullpage'); // 'fullpage' (whole page) or 'block' (a single element)
+const cliBlock = arg('block'); // block-scope default: EDS block name → `.name` (applies to targets lacking one)
+const cliSelector = arg('selector'); // block-scope default: raw CSS selector
+const cliBaseSelector = arg('base-selector'); // block-scope: selector for the base side only (legacy markup)
 
 // --base/--candidate are default origins prepended to each target's `path`. A manifest target may
 // instead carry its own full `base`/`candidate` URLs (migration parity / PR-supplied URLs), in which
@@ -77,8 +81,11 @@ if (!manifest.length) { console.error('No targets to check.'); process.exit(repo
 
 mkdirSync(outDir, { recursive: true });
 
-/** Screenshot url at a viewport → { ok, buffer } (ok:false on non-200 or nav error). */
-async function shoot(browser, url, vp) {
+/**
+ * Screenshot url at a viewport → { ok, buffer }. With `selector`, captures just that element
+ * (block-level); otherwise the full page. ok:false on non-200, nav error, or missing selector.
+ */
+async function shoot(browser, url, vp, selector) {
   const page = await browser.newPage();
   try {
     await page.setViewportSize(vp);
@@ -86,7 +93,15 @@ async function shoot(browser, url, vp) {
     const resp = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
     if (!resp || resp.status() >= 400) return { ok: false, reason: `HTTP ${resp ? resp.status() : 'no-response'}` };
     await page.waitForTimeout(1500); // settle animations/fonts
-    const buffer = await page.screenshot({ fullPage: true });
+    let buffer;
+    if (selector) {
+      if (await page.locator(selector).count() === 0) return { ok: false, reason: `selector ${selector} not found` };
+      const el = page.locator(selector).first();
+      await el.scrollIntoViewIfNeeded();
+      buffer = await el.screenshot();
+    } else {
+      buffer = await page.screenshot({ fullPage: true });
+    }
     return { ok: true, buffer };
   } catch (e) {
     return { ok: false, reason: e.message.split('\n')[0] };
@@ -131,9 +146,23 @@ try {
         console.warn(`⚠ ${label} — skipped (no base/candidate URL — set --base/--candidate or target.base/candidate)`);
         continue;
       }
+      // Block scope: capture a single element. `block` maps to the EDS class `.block`; `selector`/
+      // `baseSelector` are raw CSS overrides (baseSelector is for the legacy side in parity mode).
+      let candSel = null;
+      let baseSel = null;
+      if (scope === 'block') {
+        const blockName = target.block || cliBlock;
+        candSel = target.selector || cliSelector || (blockName ? `.${blockName}` : null);
+        baseSel = target.baseSelector || cliBaseSelector || candSel;
+        if (!candSel) {
+          rows.push({ label, status: 'skipped', detail: 'block scope needs block= or selector=' });
+          console.warn(`⚠ ${label} — skipped (block scope needs block= or selector=)`);
+          continue;
+        }
+      }
       const [b, c] = await Promise.all([
-        shoot(browser, baseUrl, vp),
-        shoot(browser, candUrl, vp),
+        shoot(browser, baseUrl, vp, baseSel),
+        shoot(browser, candUrl, vp, candSel),
       ]);
       if (!b.ok || !c.ok) {
         const why = [!b.ok && `base ${b.reason}`, !c.ok && `candidate ${c.reason}`].filter(Boolean).join(', ');
@@ -166,8 +195,8 @@ try {
 // ---- summary (console + markdown for CI step summary) ----
 const changed = rows.filter((r) => r.status === 'CHANGED');
 const skipped = rows.filter((r) => r.status === 'skipped');
-let md = `## Visual regression — base vs candidate\n\n`;
-md += `Base: ${base}\nCandidate: ${candidate}\nThreshold: ${(threshold * 100).toFixed(3)}%\n\n`;
+let md = `## Visual diff (${scope}) — base vs candidate\n\n`;
+md += `Base: ${base || '(per-target)'}\nCandidate: ${candidate || '(per-target)'}\nScope: ${scope}\nThreshold: ${(threshold * 100).toFixed(3)}%\n\n`;
 md += `| Target | Status | Diff | Artifacts |\n|---|---|---|---|\n`;
 for (const r of rows) {
   const diffCol = r.ratio !== undefined ? `${(r.ratio * 100).toFixed(3)}%` : (r.detail || '');

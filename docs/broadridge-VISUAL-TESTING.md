@@ -71,34 +71,45 @@ changed pixels are highlighted. Options: `--path /some/page` (one target), `--th
 > Caveat: `localhost` serves *previewed* content while `.aem.live` serves *published* content — content
 > differences add noise. For a purer **code-only** diff, point `--base` at `main--…aem.page` (main preview).
 
-## In CI — two workflows, driven by the PR description
+## In CI — one matrix, four checks
 
-On PRs that touch `blocks/** scripts/** styles/** head.html` (or the visual tool/parser), **two** workflows run:
+`.github/workflows/broadridge-visual.yaml` runs a **2×2 matrix** on PRs that touch `blocks/** scripts/** styles/**
+head.html` (or the visual tool/parser), producing four checks:
 
-- **`broadridge-visual-regression.yaml`** — BEFORE (`before=`) vs AFTER (`after=`). If the PR lists no URLs it
-  falls back to the default manifest (main live vs branch preview). Artifact: `visual-regression-diff`.
-- **`broadridge-visual-parity.yaml`** — LIVE/legacy (`live=`) vs AFTER (`after=`). Runs **only** if the PR lists
-  `live=` URLs; otherwise it's a no-op. Artifact: `visual-parity-diff`.
+|  | fullpage | block |
+|---|---|---|
+| **regression** (`before=` vs `after=`) | whole page, main vs branch | one block, main vs branch |
+| **parity** (`live=` vs `after=`) | whole page, legacy vs branch | one block, legacy vs branch |
 
-Both read the **PR description** — one line per changed page between the markers (see the PR template):
+- **Source** comes from the parser `--mode` (regression uses `before=`, parity uses `live=`).
+- **Scope** comes from the tool `--scope` (block uses `block=<name>` → `.<name>`, or `selector=`).
+- Artifacts: `visual-<mode>-<scope>-diff`. Each combo with no matching URLs is a **no-op** (regression+fullpage
+  falls back to the default `main-vs-branch` manifest so it always has something to show).
+
+All read the **PR description** — one line per changed page between the markers (see the PR template):
 
 ```
 <!-- visual:start -->
-- cit-hero | after=https://<branch>--…aem.page/cit/hero | before=https://main--…aem.live/cit/hero | live=https://legacy…/hero.html
+- cit-hero | after=https://<branch>--…aem.page/cit/hero | before=https://main--…aem.live/cit/hero | live=https://legacy…/hero.html | block=hero-banner
 <!-- visual:end -->
 ```
 
-`tools/quality/broadridge-visual-parse-pr.mjs` turns those lines into a manifest per mode
-(`--mode regression` uses `before`; `--mode parity` uses `live`). Both write a table to the **job summary** and
-upload before/after/diff PNGs. Each can also be run manually from the **Actions** tab (`workflow_dispatch`).
+`tools/quality/broadridge-visual-parse-pr.mjs` turns those lines into a per-mode manifest;
+`broadridge-visual-check.mjs` runs it at the chosen scope. The whole matrix can also be run from the **Actions**
+tab (`workflow_dispatch`).
 
-**Report-only for sprint one** (`continue-on-error`) — neither fails the PR yet. To make regression blocking once
-the baseline is clean: remove its `continue-on-error` lines and drop `--report-only`. (Parity stays report-only —
-legacy vs EDS is a visual reference, not a threshold gate.)
+**Report-only for sprint one** (`continue-on-error`) — no combo fails the PR yet. To make one blocking (e.g.
+regression+fullpage) once its baseline is clean, split that combo out or gate it; keep parity report-only (legacy
+vs EDS is a visual reference, not a threshold gate).
 
-### Locally
-Pass the same URLs on the CLI — e.g. regression `--base <main-live-or-before> --candidate http://localhost:3000`,
-or parity `--base <legacy-url> --candidate http://localhost:3000` (add `--path` for one page).
+### Locally — two skills
+Use **`broadridge-visual-fullpage`** or **`broadridge-visual-block`**; both wrap the same CLI:
+```bash
+# full page, regression
+npm run broadridge:test:visual -- --scope fullpage --base <before> --candidate http://localhost:3000 --path /cit
+# one block, regression
+npm run broadridge:test:visual -- --scope block --block hero-banner --base <before> --candidate http://localhost:3000 --path /cit
+```
 
 ## Reading a result
 

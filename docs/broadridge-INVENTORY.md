@@ -58,6 +58,8 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 | `.claude/skills/broadridge-block-review/SKILL.md` | Pre-PR block self-review checklist. | **The Skill tool.** At session start the harness registers only `name`+`description`; the **full body loads when invoked** — description match ("modified an EDS block"), a user typing `/broadridge-block-review`, or the model choosing it. |
 | `.claude/skills/broadridge-pr-readiness/SKILL.md` | Definition of done before a PR. | Same. Loads when preparing a PR. |
 | `.claude/skills/broadridge-i18n-rtl/SKILL.md` | Placeholders/`Intl`/RTL guidance. | Same. Loads when code touches user-facing text or locales. |
+| `.claude/skills/broadridge-visual-fullpage/SKILL.md` | Run a full-page visual comparison (regression or parity) locally. | Same. Loads when doing a whole-page visual check. |
+| `.claude/skills/broadridge-visual-block/SKILL.md` | Run a block/section-level visual comparison (`block=`/`selector=`). | Same. Loads when doing a block-level visual check. |
 | `.agents/skills/broadridge-*/SKILL.md` (3 mirrors) | Byte-identical copies. | Read by **other agent tooling that consumes `.agents/`** (the repo already maintained this twin tree). Kept in sync. |
 
 ## 4. Harness & tooling config
@@ -92,8 +94,7 @@ Not auto-loaded — referenced from `AGENTS.md`/skills and opened when relevant 
 |---|---|---|
 | `.github/workflows/main.yaml` *(modified)* | Runs `npm ci` → `lint` → `broadridge:check` → `broadridge:test:unit`. | **GitHub Actions, on every `push`** (`on: [push]`). |
 | `.github/workflows/broadridge-a11y.yaml` *(new)* | Waits for the branch preview, runs axe-core against it. | **GitHub Actions, on `pull_request` to `main`**. |
-| `.github/workflows/broadridge-visual-regression.yaml` *(new)* | BEFORE vs AFTER (PR `before=`/`after=` URLs, else main-vs-branch manifest); `visual-regression-diff` artifact. Report-only. | **GitHub Actions, on `pull_request` touching `blocks/** scripts/** styles/** head.html`** + manual. |
-| `.github/workflows/broadridge-visual-parity.yaml` *(new)* | LIVE/legacy vs AFTER (PR `live=`/`after=` URLs); `visual-parity-diff` artifact. No-op if no `live=` URLs. Report-only. | **GitHub Actions, on `pull_request`** (same paths) + manual. |
+| `.github/workflows/broadridge-visual.yaml` *(new)* | 2×2 matrix → 4 checks: `(regression\|parity) × (fullpage\|block)`, driven by PR `before=`/`live=`/`after=`/`block=` URLs. Artifacts `visual-<mode>-<scope>-diff`. Report-only. | **GitHub Actions, on `pull_request` touching `blocks/** scripts/** styles/** head.html`** + manual. |
 | `.github/pull_request_template.md` *(modified)* | Pre-fills the PR body with the definition-of-done checklist. | **GitHub**, when a contributor **opens a PR**. |
 
 ---

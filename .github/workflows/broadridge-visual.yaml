@@ -1,0 +1,89 @@
+name: Visual
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'blocks/**'
+      - 'scripts/**'
+      - 'styles/**'
+      - 'head.html'
+      - 'tools/quality/broadridge-visual-check.mjs'
+      - 'tools/quality/broadridge-visual-parse-pr.mjs'
+      - 'tools/quality/broadridge-visual-targets.json'
+  workflow_dispatch: {}
+
+# One matrix → four checks: {regression, parity} × {fullpage, block}. See docs/broadridge-VISUAL-TESTING.md.
+#  - regression = EDS main (before=) vs branch (after=);  parity = legacy (live=) vs branch (after=)
+#  - fullpage = whole page;  block = a single element (block=<name> → .<name>, or selector=)
+# URLs come from the PR description's `visual:start` block (parsed per mode). Regression+fullpage falls back to
+# the default manifest (main vs branch) when the PR lists no URLs. Report-only (continue-on-error); no PNGs in git.
+
+jobs:
+  visual:
+    name: visual (${{ matrix.mode }}, ${{ matrix.scope }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [regression, parity]
+        scope: [fullpage, block]
+    env:
+      BASE: ${{ format('https://main--da-broadridge-cit--{0}.aem.live', github.repository_owner) }}
+      CANDIDATE: ${{ (github.head_ref && format('https://{0}--da-broadridge-cit--{1}.aem.page', github.head_ref, github.repository_owner)) || format('https://main--da-broadridge-cit--{0}.aem.page', github.repository_owner) }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build manifest for ${{ matrix.mode }}/${{ matrix.scope }}
+        id: m
+        run: |
+          node tools/quality/broadridge-visual-parse-pr.mjs --mode ${{ matrix.mode }} --out /tmp/m.json
+          # regression + fullpage: fall back to the default paths manifest when the PR lists no URLs
+          if [ "$(node -e "process.stdout.write(String(require('/tmp/m.json').length))")" = "0" ] \
+             && [ "${{ matrix.mode }}" = "regression" ] && [ "${{ matrix.scope }}" = "fullpage" ]; then
+            cp tools/quality/broadridge-visual-targets.json /tmp/m.json
+            echo "use_origins=1" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${{ matrix.scope }}" = "block" ]; then
+            COUNT=$(node -e "const a=require('/tmp/m.json');process.stdout.write(String(a.filter(t=>t.block||t.selector).length))")
+          else
+            COUNT=$(node -e "process.stdout.write(String(require('/tmp/m.json').length))")
+          fi
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "targets for ${{ matrix.mode }}/${{ matrix.scope }}: $COUNT"
+      - name: Install browser
+        if: steps.m.outputs.count != '0'
+        run: npx playwright install --with-deps chromium
+      - name: Wait for branch preview
+        if: steps.m.outputs.count != '0' && github.head_ref != ''
+        continue-on-error: true
+        run: |
+          P="https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page/"
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$P" || true)
+            echo "attempt $i: $P -> $code"; [ "$code" = "200" ] && exit 0; sleep 15
+          done
+      - name: Run visual diff (report-only)
+        if: steps.m.outputs.count != '0'
+        continue-on-error: true
+        run: |
+          if [ "${{ steps.m.outputs.use_origins }}" = "1" ]; then
+            npm run broadridge:test:visual -- --manifest /tmp/m.json --base "$BASE" --candidate "$CANDIDATE" --scope ${{ matrix.scope }} --report-only
+          else
+            npm run broadridge:test:visual -- --manifest /tmp/m.json --scope ${{ matrix.scope }} --report-only
+          fi
+          cat tools/quality/visual-output/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Nothing to compare
+        if: steps.m.outputs.count == '0'
+        run: echo "No targets for ${{ matrix.mode }}/${{ matrix.scope }} — add matching URLs (before=/live=/block=) to the PR's visual:start block." >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload diff images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-${{ matrix.mode }}-${{ matrix.scope }}-diff
+          path: tools/quality/visual-output/
+          if-no-files-found: ignore
