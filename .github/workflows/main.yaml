@@ -12,3 +12,5 @@ jobs:
         node-version: 24
     - run: npm ci
     - run: npm run lint
+    - run: npm run broadridge:check
+    - run: npm run broadridge:test:unit
