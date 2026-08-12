@@ -9,10 +9,24 @@ on:
       - 'head.html'
       - 'tools/quality/broadridge-visual-check.mjs'
       - 'tools/quality/broadridge-visual-targets.json'
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Before/source URL (blank = VISUAL_BASE_URL repo variable, else production/live main)'
+        required: false
+      candidate:
+        description: 'After URL (blank = this branch preview, else main preview)'
+        required: false
 
-# Diffs production/live (before) vs the branch preview (after) for the manifest paths, at
-# mobile/tablet/desktop. See docs/broadridge-VISUAL-TESTING.md.
-# No baseline PNGs are committed — both sides render in the same CI browser (no font/AA mismatch).
+# Diffs a BASE (before) vs CANDIDATE (after) for the manifest paths, at mobile/tablet/desktop.
+# See docs/broadridge-VISUAL-TESTING.md. No baseline PNGs are committed — both sides render in the same browser.
+#
+# BASE resolution (first non-empty wins):
+#   1. the workflow_dispatch `base` input
+#   2. the `VISUAL_BASE_URL` repo variable  ← set this to the LEGACY/SOURCE site for migration-parity checks
+#   3. production/live main (default: regression check)
+# Per-page overrides: a manifest target may carry its own `base`/`candidate` full URL (for legacy pages
+# whose path differs from the new EDS path).
 #
 # REPORT-ONLY for sprint one: `continue-on-error` keeps diffs from failing the PR. Remove those lines
 # (and drop `--report-only`) to make it blocking once the baseline is stable.
@@ -20,6 +34,9 @@ on:
 jobs:
   visual:
     runs-on: ubuntu-latest
+    env:
+      BASE: ${{ github.event.inputs.base || vars.VISUAL_BASE_URL || format('https://main--da-broadridge-cit--{0}.aem.live', github.repository_owner) }}
+      CANDIDATE: ${{ github.event.inputs.candidate || (github.head_ref && format('https://{0}--da-broadridge-cit--{1}.aem.page', github.head_ref, github.repository_owner)) || format('https://main--da-broadridge-cit--{0}.aem.page', github.repository_owner) }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -28,23 +45,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Wait for branch preview
+      - name: Show comparison URLs
+        run: |
+          echo "BASE (before):     $BASE"
+          echo "CANDIDATE (after): $CANDIDATE"
+      - name: Wait for candidate preview
         continue-on-error: true
-        env:
-          PREVIEW: https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page/
         run: |
           for i in $(seq 1 20); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW" || true)
-            echo "attempt $i: $PREVIEW -> $code"
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$CANDIDATE/" || true)
+            echo "attempt $i: $CANDIDATE/ -> $code"
             [ "$code" = "200" ] && exit 0
             sleep 15
           done
-          echo "Preview not ready after retries" && exit 1
+          echo "Candidate preview not ready after retries" && exit 1
       - name: Run visual diff (report-only)
         continue-on-error: true
-        env:
-          BASE: https://main--da-broadridge-cit--${{ github.repository_owner }}.aem.live
-          CANDIDATE: https://${{ github.head_ref }}--da-broadridge-cit--${{ github.repository_owner }}.aem.page
         run: |
           npm run broadridge:test:visual -- --base "$BASE" --candidate "$CANDIDATE" --report-only
           cat tools/quality/visual-output/summary.md >> "$GITHUB_STEP_SUMMARY" || true

@@ -5,13 +5,43 @@ before merge. Runs as a **local pre-check** and a **PR CI job**. Rules: [broadri
 
 ## Model
 
-Compare **production/live (before)** against the **current branch (after)** for a manifest of page paths, at
-mobile / tablet / desktop. Both sides are rendered by the same browser, so there are **no baseline PNGs in git**
-and no font/anti-aliasing platform mismatch. This doubles as **migration-parity QA**: "does the new EDS page
-still match production?"
+Compare a **BASE (before)** against a **CANDIDATE (after)** for a manifest of page paths, at mobile / tablet /
+desktop. Both sides render in the same browser, so there are **no baseline PNGs in git** and no font/AA mismatch.
+`--base` / `--candidate` are just URLs — point them at whatever you need:
 
-- Base (before): `https://main--da-broadridge-cit--<owner>.aem.live` (production/live)
-- Candidate (after): `https://<branch>--da-broadridge-cit--<owner>.aem.page` (branch preview), or `http://localhost:3000` locally
+| Mode | BASE (before) | CANDIDATE (after) | Answers |
+|---|---|---|---|
+| **Regression** (default) | EDS `main` live — `https://main--da-broadridge-cit--<owner>.aem.live` | branch preview `https://<branch>--…aem.page` (or `http://localhost:3000`) | "did my change break the *current* EDS site?" |
+| **Migration parity** | the **legacy/source site** being migrated | the branch preview / localhost | "does my new EDS page match the *original* site?" |
+
+Use **migration parity** when the page is brand-new on EDS (e.g. a hero block that `main` doesn't have yet) —
+comparing against `main` would just 404 and skip. Point BASE at the legacy site instead.
+
+> Caveat for migration parity: a legacy non-EDS page and a new EDS page are different implementations, so the
+> pixel-diff **%** will usually be high even when they look alike. In this mode treat the **before/after images
+> as a side-by-side visual reference**, not a pass/fail threshold — which is another reason it stays report-only.
+
+### Setting the source site
+
+- **CI (all PRs):** set a repo **variable** `VISUAL_BASE_URL` (Settings → Secrets and variables → Actions →
+  Variables) to the legacy site origin, e.g. `https://www.legacy-cit-site.com`. The workflow uses it as BASE.
+- **CI (one-off):** run the workflow manually (Actions → Visual regression → *Run workflow*) and pass `base`
+  (and optionally `candidate`) inputs.
+- **Locally:** pass `--base https://www.legacy-cit-site.com`.
+
+### Per-page overrides (when legacy paths differ)
+
+If a legacy URL doesn't share the new EDS path, give the target its own full `base` (and/or `candidate`) URL:
+
+```json
+[
+  { "path": "/cit", "viewports": ["mobile", "tablet", "desktop"] },
+  { "path": "/cit/hero", "base": "https://www.legacy-cit-site.com/investor/hero.html" }
+]
+```
+
+`/cit/hero`'s "before" is the explicit legacy URL; its "after" is `<candidate>/cit/hero`. Targets without a
+`base` fall back to `<--base origin> + path` as usual.
 
 ## Targets — `tools/quality/broadridge-visual-targets.json`
 

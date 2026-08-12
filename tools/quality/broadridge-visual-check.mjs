@@ -121,9 +121,15 @@ try {
       const vp = VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }
       const label = `${target.path} @ ${vpName}`;
+      // Per-target full-URL overrides support migration parity, where the legacy/source page lives
+      // at a different path/origin than the new EDS page — e.g.
+      //   { "path": "/cit/hero", "base": "https://legacy.example.com/investor/hero.html" }
+      // compares the legacy hero against <candidate>/cit/hero. Falls back to <origin> + path.
+      const baseUrl = target.base || (stripTrailing(base) + target.path);
+      const candUrl = target.candidate || (stripTrailing(candidate) + target.path);
       const [b, c] = await Promise.all([
-        shoot(browser, stripTrailing(base) + target.path, vp),
-        shoot(browser, stripTrailing(candidate) + target.path, vp),
+        shoot(browser, baseUrl, vp),
+        shoot(browser, candUrl, vp),
       ]);
       if (!b.ok || !c.ok) {
         const why = [!b.ok && `base ${b.reason}`, !c.ok && `candidate ${c.reason}`].filter(Boolean).join(', ');
