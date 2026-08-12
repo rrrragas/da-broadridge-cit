@@ -23,8 +23,8 @@ footer .footer h5,
 footer .footer h6 {
   margin: 0 0 12px;
   color: var(--background-color);
-  font-size: var(--heading-font-size-xs);
-  font-weight: 500;
+  font-size: 14px; /* match source footer link-group label */
+  font-weight: 300;
 }
 
 footer .footer ul {
@@ -46,6 +46,17 @@ footer .footer a:hover,
 footer .footer a:focus-visible {
   color: var(--brand-accent);
   text-decoration: underline;
+}
+
+/* legal placeholder links: no real destination yet — inert, not clickable */
+footer .footer a.footer-legal-placeholder {
+  cursor: default;
+}
+
+footer .footer a.footer-legal-placeholder:hover,
+footer .footer a.footer-legal-placeholder:focus-visible {
+  color: var(--background-color);
+  text-decoration: none;
 }
 
 footer .footer .icon img,

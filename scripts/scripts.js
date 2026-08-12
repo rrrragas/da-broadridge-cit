@@ -175,6 +175,26 @@ function decoratePageMetadata(main) {
 }
 
 /**
+ * Repoints "Talk to Us" CTAs at the on-page contact form (#talk-to-us).
+ * The source authored these as modal triggers; the migrated content stores
+ * `href="#talk-to-us"`, but the delivery pipeline strips a bare same-page
+ * fragment to `/`. Re-set the href at runtime (matching by link text) so the
+ * CTA scrolls to the form-contact block, which owns the `#talk-to-us` anchor.
+ * @param {Element} scope The container to search (main, nav, etc.)
+ */
+function fixTalkToUsLinks(scope) {
+  if (!scope) return;
+  scope.querySelectorAll('a').forEach((a) => {
+    if (a.textContent.trim().toLowerCase() !== 'talk to us') return;
+    const href = a.getAttribute('href') || '';
+    // only repoint links the pipeline flattened (root or empty) or explicit anchors
+    if (href === '/' || href === '' || href === '#' || href.endsWith('#talk-to-us')) {
+      a.setAttribute('href', '#talk-to-us');
+    }
+  });
+}
+
+/**
  * Decorates the main element.
  * @param {Element} main The main element
  */
@@ -187,6 +207,7 @@ export function decorateMain(main) {
   decoratePageMetadata(main);
   decorateBlocks(main);
   decorateButtons(main);
+  fixTalkToUsLinks(main);
 }
 
 /**
@@ -218,7 +239,19 @@ async function loadEager(doc) {
  * @param {Element} doc The container element
  */
 async function loadLazy(doc) {
-  loadHeader(doc.querySelector('body > header'));
+  const header = doc.querySelector('body > header');
+  loadHeader(header);
+  // repoint nav "Talk to Us" CTAs once the header block has loaded its content
+  // (loadHeader is async and populates the nav after this call returns).
+  if (header) {
+    const observer = new MutationObserver(() => {
+      if (header.querySelector('a')) {
+        fixTalkToUsLinks(header);
+        observer.disconnect();
+      }
+    });
+    observer.observe(header, { childList: true, subtree: true });
+  }
 
   const main = doc.querySelector('main');
   await loadSections(main);

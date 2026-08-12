@@ -60,7 +60,7 @@
   margin: 0 0 12px;
   color: var(--background-color);
   font-size: var(--heading-font-size-xs);
-  font-weight: 600;
+  font-weight: 500; /* match source card title weight (baseline) */
 }
 
 .cards.feature .cards-card-body p {

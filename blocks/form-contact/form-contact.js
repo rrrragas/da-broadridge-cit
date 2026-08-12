@@ -61,6 +61,13 @@ export default function decorate(block) {
   const config = readConfig(block);
   block.textContent = '';
 
+  // Anchor target for the "TALK TO US" CTAs (nav, hero tools, closing CTA all
+  // link to #talk-to-us). Set the id on the block's containing section so the
+  // in-page jump lands on the whole contact section, and add scroll-margin so
+  // the fixed header doesn't overlap it.
+  const section = block.closest('.section') || block;
+  section.id = 'talk-to-us';
+
   const wrap = document.createElement('div');
   wrap.className = 'form-contact-inner';
 
