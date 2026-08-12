@@ -160,7 +160,9 @@ try {
       if (scope === 'block') {
         const blockName = target.block || cliBlock;
         candSel = target.selector || cliSelector || (blockName ? `.${blockName}` : null);
-        baseSel = target.baseSelector || cliBaseSelector || candSel;
+        // baseSelector describes the LEGACY element, so it only applies when the base is the legacy
+        // site (parity). In regression both sides are EDS → the base uses the same block selector.
+        baseSel = (mode === 'parity' ? (target.baseSelector || cliBaseSelector) : null) || candSel;
         if (!candSel) {
           rows.push({ label, status: 'skipped', detail: 'block scope needs block= or selector=' });
           console.warn(`⚠ ${label} — skipped (block scope needs block= or selector=)`);
