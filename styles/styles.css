@@ -173,6 +173,17 @@ a:hover {
   text-decoration: underline;
 }
 
+/*
+ * Inline text links must be distinguishable without relying on color
+ * (WCAG 1.4.1). Underline links inside default-content prose (paragraphs,
+ * list items). Standalone button links live in `p.button-wrapper` and are
+ * excluded via :not(.button); nav/footer/card links aren't default content.
+ */
+main .default-content-wrapper p a:any-link:not(.button),
+main .default-content-wrapper li a:any-link:not(.button) {
+  text-decoration: underline;
+}
+
 /* buttons */
 p.button-wrapper {
   margin: 12px 0;
