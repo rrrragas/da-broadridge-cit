@@ -18,13 +18,18 @@
  * checks every block present in the baseline. Only blocks that both (a) appear
  * in source-baseline.json and (b) exist under blocks/ are rendered.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import {
+  readFileSync, existsSync, mkdirSync, writeFileSync,
+} from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
+import { numOf, classify } from './lib/style-audit-utils.mjs';
 
 const ROOT = process.cwd();
 const BASELINE = join(ROOT, 'tools/quality/source-baseline.json');
 const ALLOWLIST = join(ROOT, 'tools/quality/visual-diff-allowlist.json');
+const OUT_DIR = join(ROOT, 'tools/quality/visual-output');
+const REPORT_FILE = join(OUT_DIR, 'style-drift.md');
 
 // tolerances
 const PX_TOL = 2; // px difference tolerated on sizes
@@ -62,8 +67,6 @@ function isAllowed(block, propPath) {
     return blockMatch && propMatch;
   });
 }
-
-const numOf = (v) => { const m = String(v).match(/-?[\d.]+/); return m ? parseFloat(m[0]) : null; };
 
 // Compare one value; return null if within tolerance, else a drift descriptor.
 function diffValue(prop, expected, actual) {
@@ -115,6 +118,7 @@ const page = await ctx.newPage();
 
 let totalDrift = 0;
 const report = [];
+const styleDriftTables = [];
 
 for (const block of targets) {
   const cssPath = join(ROOT, `blocks/${block}/${block}.css`);
@@ -178,20 +182,29 @@ for (const block of targets) {
   };
   walk(base, '');
 
-  const drifts = [];
+  // Every property whose value differs from baseline (beyond tolerance) gets a row — allowlisted
+  // deviations are shown too (marked accepted), not hidden, so the table stays a complete picture.
+  const diffRows = [];
   for (const [prop, actual] of Object.entries(measured)) {
     const expected = flat[prop];
     if (expected === undefined) continue;
     const d = diffValue(prop, expected, actual);
-    if (d && !isAllowed(block, prop)) drifts.push(d);
+    if (!d) continue;
+    const allowed = isAllowed(block, prop);
+    diffRows.push({
+      ...d,
+      allowed,
+      ...(allowed ? { icon: '✅', label: 'allowlisted' } : classify(prop, expected, actual)),
+    });
   }
 
-  if (drifts.length) {
-    totalDrift += drifts.length;
-    report.push(`  ${WARN} ${block}: ${drifts.length} drift(s) vs source baseline`);
-    for (const d of drifts) report.push(`      ${d.prop}: baseline ${d.expected} → migrated ${d.actual}`);
+  if (diffRows.length) {
+    const unexplained = diffRows.filter((r) => !r.allowed);
+    totalDrift += unexplained.length;
+    report.push(`  ${unexplained.length ? WARN : OK} ${block}: ${diffRows.length} difference(s) vs source baseline (${unexplained.length} unexplained)`);
+    styleDriftTables.push({ block, rows: diffRows });
   } else {
-    report.push(`  ${OK} ${block}: matches baseline (within tolerance + allowlist)`);
+    report.push(`  ${OK} ${block}: matches baseline (within tolerance)`);
   }
 }
 
@@ -199,8 +212,30 @@ await browser.close();
 
 console.log(`\nvisual-diff (advisory) — ${targets.length} block(s) checked vs source baseline:`);
 report.forEach((r) => console.log(r));
+
+// Build the Property | Source | Migrated | Severity table(s) — printed and written to
+// tools/quality/visual-output/style-drift.md so it can be pasted into a PR the same way summary.md
+// (the pixel-diff report) is. Legend: 🔴 clear divergence  🟡 minor  🟢 negligible  ✅ allowlisted.
+let md = '';
+if (styleDriftTables.length) {
+  md += '# Styling drift — meaningful differences\n\n';
+  md += 'Legend: 🔴 clear divergence · 🟡 minor · 🟢 negligible · ✅ allowlisted (accepted)\n\n';
+  for (const { block, rows } of styleDriftTables) {
+    md += `## ${block}\n\n`;
+    md += '| Property | Source | Migrated | Severity |\n|---|---|---|---|\n';
+    for (const r of rows) {
+      md += `| ${r.prop} | ${r.expected} | ${r.actual} | ${r.icon} ${r.label} |\n`;
+    }
+    md += '\n';
+  }
+  mkdirSync(OUT_DIR, { recursive: true });
+  writeFileSync(REPORT_FILE, md);
+  console.log(`\n${md}`);
+  console.log(`Full table written to ${REPORT_FILE}`);
+}
+
 if (totalDrift) {
-  console.log(`\n${WARN} ${totalDrift} unexplained drift(s). If intentional, add to tools/quality/visual-diff-allowlist.json; else fix the block CSS. See docs/broadridge-EDS-RULES.md §8.\n`);
+  console.log(`\n${WARN} ${totalDrift} unexplained (non-allowlisted) difference(s). If intentional, add to tools/quality/visual-diff-allowlist.json; else fix the block CSS. See docs/broadridge-EDS-RULES.md §8.\n`);
 } else {
   console.log(`\n${OK} visual-diff: no unexplained drift.\n`);
 }

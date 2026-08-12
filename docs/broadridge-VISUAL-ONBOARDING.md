@@ -91,7 +91,8 @@ npm run broadridge:test:visual -- --mode parity --scope block --path /cit      #
       In `block` scope it captures **just that element**; in `fullpage` the whole scrolling page.
    3. If a page 404s or the block isn't found → **skips** it with a note (never crashes).
    4. **Pads both images** to the same size and **diffs** them → a changed-pixel **percentage**.
-   5. **Writes** `…-before.png`, `…-after.png`, `…-diff.png`.
+   5. **Writes** PNGs named for each side: `…-eds-main.png`/`…-eds-branch.png`/`…-diff.png` (regression) or
+      `…-livesite.png`/`…-eds.png`/`…-diff.png` (parity).
 5. **Closes the browser and writes a summary.**
 
 ### What you get

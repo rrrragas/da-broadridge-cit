@@ -5,8 +5,9 @@
  *
  * Screenshots each manifest path at mobile/tablet/desktop on BOTH base and candidate, pads the two
  * full-page images to a common canvas (pixelmatch needs equal dimensions), diffs them, and writes
- * before/after/diff PNGs. Missing/404 targets are skipped with a warning — never a crash (important
- * during migration when a page exists on only one side).
+ * PNGs named for what each side actually is — eds-main/eds-branch/diff.png (regression) or
+ * livesite/eds/diff.png (parity) — instead of generic before/after. Missing/404 targets are skipped
+ * with a warning — never a crash (important during migration when a page exists on only one side).
  *
  * Usage:
  *   node tools/quality/broadridge-visual-check.mjs --base <url> --candidate <url> [options]
@@ -74,6 +75,16 @@ const VIEWPORTS = {
 
 const stripTrailing = (u) => u.replace(/\/+$/, '');
 const slug = (s) => s.replace(/[^\w]+/g, '_').replace(/^_|_$/g, '') || 'root';
+
+// Output filenames name each side by what it actually is instead of generic before/after,
+// so `ls tools/quality/visual-output` is self-explanatory without checking --mode.
+// regression: base = EDS main (production) vs candidate = EDS branch (local/PR).
+// parity: base = the legacy/live site vs candidate = the migrated EDS page.
+const SIDE_LABELS = {
+  regression: { base: 'eds-main', candidate: 'eds-branch' },
+  parity: { base: 'livesite', candidate: 'eds' },
+};
+const { base: baseLabel, candidate: candLabel } = SIDE_LABELS[mode] || SIDE_LABELS.regression;
 
 let manifest;
 if (manifestPath) {
@@ -199,11 +210,11 @@ try {
       const changed = pixelmatch(bp.data, cp.data, diff.data, W, H, { threshold: 0.1, includeAA: false });
       const ratio = changed / (W * H);
       const stem = join(outDir, `${slug(edsPath)}-${vpName}`);
-      writeFileSync(`${stem}-before.png`, PNG.sync.write(bp));
-      writeFileSync(`${stem}-after.png`, PNG.sync.write(cp));
+      writeFileSync(`${stem}-${baseLabel}.png`, PNG.sync.write(bp));
+      writeFileSync(`${stem}-${candLabel}.png`, PNG.sync.write(cp));
       writeFileSync(`${stem}-diff.png`, PNG.sync.write(diff));
       const status = ratio > threshold ? 'CHANGED' : 'ok';
-      rows.push({ label, status, ratio, files: `${slug(edsPath)}-${vpName}-{before,after,diff}.png` });
+      rows.push({ label, status, ratio, files: `${slug(edsPath)}-${vpName}-{${baseLabel},${candLabel},diff}.png` });
       console.log(`${status === 'CHANGED' ? '✗' : '✓'} ${label} — ${(ratio * 100).toFixed(3)}% diff`);
     }
   }
