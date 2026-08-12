@@ -1,3 +1,8 @@
+/* offset the #talk-to-us in-page jump so the fixed header doesn't cover it */
+#talk-to-us {
+  scroll-margin-top: calc(var(--nav-height) + 16px);
+}
+
 .form-contact .form-contact-inner {
   max-width: 640px;
   margin: 0 auto;
