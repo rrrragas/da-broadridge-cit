@@ -11,7 +11,7 @@
  * Usage:
  *   node tools/quality/broadridge-visual-check.mjs --base <url> --candidate <url> [options]
  * Options:
- *   --manifest <path>   default tools/quality/broadridge-visual-targets.json
+ *   --manifest <path>   pages to check (default: the `targets` array in broadridge-visual.config.json)
  *   --out <dir>         default tools/quality/visual-output
  *   --threshold <ratio> default 0.001 (0.1% of pixels)
  *   --path <p>          only this manifest path
@@ -53,7 +53,7 @@ try { config = JSON.parse(readFileSync(configPath, 'utf8')); } catch { /* config
 const mode = arg('mode', 'regression'); // 'regression' → config.regressionBase | 'parity' → config.parityBase
 const base = arg('base') || (mode === 'parity' ? config.parityBase : config.regressionBase) || null;
 const candidate = arg('candidate') || config.localCandidate || null;
-const manifestPath = arg('manifest', 'tools/quality/broadridge-visual-targets.json');
+const manifestPath = arg('manifest'); // CI passes a generated manifest; otherwise use config.targets
 const outDir = arg('out', 'tools/quality/visual-output');
 const threshold = arg('threshold') ? parseFloat(arg('threshold')) : (typeof config.threshold === 'number' ? config.threshold : 0.001);
 const onlyPath = arg('path');
@@ -76,11 +76,18 @@ const stripTrailing = (u) => u.replace(/\/+$/, '');
 const slug = (s) => s.replace(/[^\w]+/g, '_').replace(/^_|_$/g, '') || 'root';
 
 let manifest;
-try {
-  manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-} catch (e) {
-  console.error(`Cannot read manifest ${manifestPath}: ${e.message}`);
-  process.exit(1);
+if (manifestPath) {
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch (e) {
+    console.error(`Cannot read manifest ${manifestPath}: ${e.message}`);
+    process.exit(1);
+  }
+} else if (Array.isArray(config.targets)) {
+  manifest = config.targets;
+} else {
+  console.error(`No pages to check — add a "targets" array to ${configPath} (or pass --manifest).`);
+  process.exit(reportOnly ? 0 : 1);
 }
 if (onlyPath) manifest = manifest.filter((t) => t.path === onlyPath);
 if (!manifest.length) { console.error('No targets to check.'); process.exit(reportOnly ? 0 : 1); }

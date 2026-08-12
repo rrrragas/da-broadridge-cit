@@ -31,9 +31,15 @@ Project defaults (which URLs, sensitivity, screen sizes) live in
   "localCandidate": "http://localhost:3000",
   "threshold": 0.001,
   "viewports": ["mobile", "tablet", "desktop"],
-  "checks": { "regression": true, "parity": true, "fullpage": true, "block": true }
+  "checks": { "regression": true, "parity": true, "fullpage": true, "block": true },
+  "targets": [
+    { "path": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
+  ]
 }
 ```
+
+`targets` is the list of **pages** to check — one entry per page (path + block selector). Add pages as they
+migrate: `{ "path": "/cit/products", "block": "cards" }`.
 
 `checks` are **CI on/off toggles** — the PR runs enabled *sources* (regression/parity) × enabled *scopes*
 (fullpage/block). Turn `parity` off until migration starts, or `block` off early on. (Local commands ignore these.)

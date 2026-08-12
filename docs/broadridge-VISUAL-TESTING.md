@@ -43,19 +43,19 @@ checks at all. These toggles are **CI-only**; a local `--mode`/`--scope` always 
 - **In CI:** the matrix builds BEFORE/AFTER from the PR description's `before=`/`live=`/`after=` URLs (per page);
   regression+fullpage falls back to `main` live vs the branch preview. `threshold`/`viewports` come from the config.
 
-## Two files: domains vs pages
+## One config file — `tools/quality/broadridge-visual.config.json`
 
-The two config files have a clean split:
+Everything lives in a single file:
 
-- **`broadridge-visual.config.json` — domains + global defaults only.** The three origins
-  (`regressionBase`, `parityBase`, `localCandidate`), plus `threshold`, `viewports`, and the CI `checks`
-  toggles. **No page paths here.**
-- **`broadridge-visual-targets.json` — the pages.** Per-page **paths** and **block-level selectors**. The tool
-  joins `<config origin> + <target path>`, so you never repeat a domain here.
+- **Origins** — `regressionBase`, `parityBase`, `localCandidate` (domains only, no paths).
+- **Defaults** — `threshold`, `viewports`.
+- **CI toggles** — `checks`.
+- **`targets`** — the list of pages: per-page **paths** + **block selectors**. The tool joins
+  `<origin> + <target path>`, so a domain is never repeated in a target.
 
-## Targets — `tools/quality/broadridge-visual-targets.json`
+## `targets` — one entry per page
 
-Each entry is one page. Fields:
+Fields:
 
 | Field | Side | Meaning |
 |---|---|---|
@@ -70,14 +70,13 @@ Each entry is one page. Fields:
 Example (CIT — EDS and legacy share the `/cit` route, so no `legacyPath` needed):
 
 ```json
-[
-  { "path": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header",
-    "viewports": ["mobile", "tablet", "desktop"] }
+"targets": [
+  { "path": "/cit", "block": "hero-banner", "baseSelector": ".et_pb_fullwidth_header" }
 ]
 ```
 
-**Add each migrated page** here as you go — e.g. `{ "path": "/cit/products", "block": "cards" }`. A page must
-resolve on **both** sides or it's **skipped with a warning** (never a crash) — expected mid-migration.
+**Add each migrated page** to the `targets` array as you go — e.g. `{ "path": "/cit/products", "block": "cards" }`.
+A page must resolve on **both** sides or it's **skipped with a warning** (never a crash) — expected mid-migration.
 
 ## Run it locally (pre-check)
 

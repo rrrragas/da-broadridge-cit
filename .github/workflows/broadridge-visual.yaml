@@ -10,7 +10,6 @@ on:
       - 'tools/quality/broadridge-visual-check.mjs'
       - 'tools/quality/broadridge-visual-parse-pr.mjs'
       - 'tools/quality/broadridge-visual-matrix.mjs'
-      - 'tools/quality/broadridge-visual-targets.json'
       - 'tools/quality/broadridge-visual.config.json'
   workflow_dispatch: {}
 
@@ -55,7 +54,7 @@ jobs:
           node tools/quality/broadridge-visual-parse-pr.mjs --mode ${{ matrix.mode }} --out /tmp/m.json
           if [ "$(node -e "process.stdout.write(String(require('/tmp/m.json').length))")" = "0" ] \
              && [ "${{ matrix.mode }}" = "regression" ] && [ "${{ matrix.scope }}" = "fullpage" ]; then
-            cp tools/quality/broadridge-visual-targets.json /tmp/m.json
+            node -e "require('fs').writeFileSync('/tmp/m.json', JSON.stringify(require('./tools/quality/broadridge-visual.config.json').targets || []))"
             echo "use_origins=1" >> "$GITHUB_OUTPUT"
           fi
           if [ "${{ matrix.scope }}" = "block" ]; then
