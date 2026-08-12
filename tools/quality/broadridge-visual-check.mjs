@@ -52,10 +52,9 @@ const threshold = parseFloat(arg('threshold', '0.001'));
 const onlyPath = arg('path');
 const reportOnly = hasFlag('report-only');
 
-if (!base || !candidate) {
-  console.error('Usage: --base <url> --candidate <url> [--manifest --out --threshold --path --report-only]');
-  process.exit(1);
-}
+// --base/--candidate are default origins prepended to each target's `path`. A manifest target may
+// instead carry its own full `base`/`candidate` URLs (migration parity / PR-supplied URLs), in which
+// case the origins are optional. Targets that resolve to neither are skipped below.
 
 const VIEWPORTS = {
   mobile: { width: 375, height: 667 },
@@ -125,8 +124,13 @@ try {
       // at a different path/origin than the new EDS page — e.g.
       //   { "path": "/cit/hero", "base": "https://legacy.example.com/investor/hero.html" }
       // compares the legacy hero against <candidate>/cit/hero. Falls back to <origin> + path.
-      const baseUrl = target.base || (stripTrailing(base) + target.path);
-      const candUrl = target.candidate || (stripTrailing(candidate) + target.path);
+      const baseUrl = target.base || (base ? stripTrailing(base) + target.path : null);
+      const candUrl = target.candidate || (candidate ? stripTrailing(candidate) + target.path : null);
+      if (!baseUrl || !candUrl) {
+        rows.push({ label, status: 'skipped', detail: 'no base/candidate URL' });
+        console.warn(`⚠ ${label} — skipped (no base/candidate URL — set --base/--candidate or target.base/candidate)`);
+        continue;
+      }
       const [b, c] = await Promise.all([
         shoot(browser, baseUrl, vp),
         shoot(browser, candUrl, vp),

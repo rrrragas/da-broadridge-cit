@@ -71,14 +71,34 @@ changed pixels are highlighted. Options: `--path /some/page` (one target), `--th
 > Caveat: `localhost` serves *previewed* content while `.aem.live` serves *published* content — content
 > differences add noise. For a purer **code-only** diff, point `--base` at `main--…aem.page` (main preview).
 
-## In CI
+## In CI — two workflows, driven by the PR description
 
-`.github/workflows/broadridge-visual.yaml` runs on PRs that touch `blocks/**`, `scripts/**`, `styles/**`,
-`head.html`, or the visual tool/manifest. It waits for the branch preview, diffs live-vs-branch, writes a table
-to the **job summary**, and uploads the before/after/diff PNGs as a **`visual-diff` artifact**.
+On PRs that touch `blocks/** scripts/** styles/** head.html` (or the visual tool/parser), **two** workflows run:
 
-**Report-only for sprint one** (`continue-on-error`) — it never fails the PR yet. To make it blocking once the
-baseline is clean: remove the two `continue-on-error: true` lines and drop `--report-only`.
+- **`broadridge-visual-regression.yaml`** — BEFORE (`before=`) vs AFTER (`after=`). If the PR lists no URLs it
+  falls back to the default manifest (main live vs branch preview). Artifact: `visual-regression-diff`.
+- **`broadridge-visual-parity.yaml`** — LIVE/legacy (`live=`) vs AFTER (`after=`). Runs **only** if the PR lists
+  `live=` URLs; otherwise it's a no-op. Artifact: `visual-parity-diff`.
+
+Both read the **PR description** — one line per changed page between the markers (see the PR template):
+
+```
+<!-- visual:start -->
+- cit-hero | after=https://<branch>--…aem.page/cit/hero | before=https://main--…aem.live/cit/hero | live=https://legacy…/hero.html
+<!-- visual:end -->
+```
+
+`tools/quality/broadridge-visual-parse-pr.mjs` turns those lines into a manifest per mode
+(`--mode regression` uses `before`; `--mode parity` uses `live`). Both write a table to the **job summary** and
+upload before/after/diff PNGs. Each can also be run manually from the **Actions** tab (`workflow_dispatch`).
+
+**Report-only for sprint one** (`continue-on-error`) — neither fails the PR yet. To make regression blocking once
+the baseline is clean: remove its `continue-on-error` lines and drop `--report-only`. (Parity stays report-only —
+legacy vs EDS is a visual reference, not a threshold gate.)
+
+### Locally
+Pass the same URLs on the CLI — e.g. regression `--base <main-live-or-before> --candidate http://localhost:3000`,
+or parity `--base <legacy-url> --candidate http://localhost:3000` (add `--path` for one page).
 
 ## Reading a result
 

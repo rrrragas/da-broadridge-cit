@@ -1,0 +1,54 @@
+name: Visual migration parity
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'blocks/**'
+      - 'scripts/**'
+      - 'styles/**'
+      - 'head.html'
+      - 'tools/quality/broadridge-visual-check.mjs'
+      - 'tools/quality/broadridge-visual-parse-pr.mjs'
+  workflow_dispatch: {}
+
+# Migration parity = LIVE/legacy source (before) vs AFTER (branch). See docs/broadridge-VISUAL-TESTING.md.
+# Driven entirely by `live=`/`after=` URLs in the PR description (visual:start block). If none are given,
+# there is nothing to compare and the job is a no-op. Report-only — the value is the before/after images,
+# not the pixel-% (legacy and EDS are different implementations).
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    env:
+      PR_BODY: ${{ github.event.pull_request.body }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build manifest from PR live URLs
+        id: manifest
+        run: |
+          node tools/quality/broadridge-visual-parse-pr.mjs --mode parity --out /tmp/vp.json
+          echo "count=$(node -e "process.stdout.write(String(require('/tmp/vp.json').length))")" >> "$GITHUB_OUTPUT"
+      - name: Install browser
+        if: steps.manifest.outputs.count != '0'
+        run: npx playwright install --with-deps chromium
+      - name: Run parity diff (report-only)
+        if: steps.manifest.outputs.count != '0'
+        continue-on-error: true
+        run: |
+          npm run broadridge:test:visual -- --manifest /tmp/vp.json --report-only
+          cat tools/quality/visual-output/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: No parity URLs supplied
+        if: steps.manifest.outputs.count == '0'
+        run: echo "No \`live=\` URLs in the PR description — migration-parity skipped. Add \`live=<legacy-url>\` lines to enable it." >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload diff images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-parity-diff
+          path: tools/quality/visual-output/
+          if-no-files-found: ignore
