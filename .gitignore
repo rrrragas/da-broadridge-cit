@@ -8,6 +8,10 @@ helix-importer-ui
 *.bak
 .idea
 
+# Broadridge visual-regression local output + stray Playwright MCP scratch
+tools/quality/visual-output/
+.playwright-mcp/
+
 # Ensure these files are tracked
 !CLAUDE.md
 !AGENTS.md
