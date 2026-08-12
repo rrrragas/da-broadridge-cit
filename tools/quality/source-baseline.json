@@ -61,15 +61,15 @@
   "footer": {
     "bg": "rgb(0, 31, 90)",
     "heading": {
-      "fontSize": "22px",
-      "fontWeight": "500",
-      "lineHeight": "22px",
+      "_note": "link-group label (.footer__nav-links__item__title) — the actual heading over each footer link list",
+      "fontSize": "14px",
+      "fontWeight": "300",
       "color": "rgb(255, 255, 255)",
       "textTransform": "none",
-      "letterSpacing": "normal",
       "fontFamily": "freightsans_probook"
     },
-    "linkColor": "rgb(255, 255, 255)"
+    "linkColor": "rgb(255, 255, 255)",
+    "linkFontSize": "14px"
   },
   "header": {
     "_note": "Fragment-loaded (header.js). Not rendered by the per-edit fixture hook; verified via the pre-PR live-preview critique. Source = navy bar, light-blue links.",

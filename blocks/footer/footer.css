@@ -23,8 +23,8 @@ footer .footer h5,
 footer .footer h6 {
   margin: 0 0 12px;
   color: var(--background-color);
-  font-size: var(--heading-font-size-xs);
-  font-weight: 500;
+  font-size: 14px; /* match source footer link-group label */
+  font-weight: 300;
 }
 
 footer .footer ul {
