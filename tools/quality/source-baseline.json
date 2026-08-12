@@ -71,6 +71,16 @@
     },
     "linkColor": "rgb(255, 255, 255)"
   },
+  "header": {
+    "_note": "Fragment-loaded (header.js). Not rendered by the per-edit fixture hook; verified via the pre-PR live-preview critique. Source = navy bar, light-blue links.",
+    "bg": "rgb(0, 31, 90)",
+    "navLink": {
+      "fontSize": "14px",
+      "fontWeight": "700",
+      "textTransform": "uppercase",
+      "linkColorFamily": "light-on-navy (white / accent #40b8ff on hover)"
+    }
+  },
   "sections": {
     "welcome": { "backgroundColor": "rgb(235, 238, 242)" },
     "characteristics": { "backgroundColor": "rgb(240, 242, 246)" },
