@@ -20,6 +20,30 @@
       "livePath": "/cit",
       "edsSelector": ".hero-banner",
       "liveSelector": ".et_pb_fullwidth_header"
+    },
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": "header",
+      "liveSelector": "header"
+    },
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": "footer",
+      "liveSelector": "footer"
+    },
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": ".cards",
+      "liveSelector": ".et_pb_row_1"
+    },
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": ".columns.compare",
+      "liveSelector": ".et_pb_row_4"
     }
   ]
 }

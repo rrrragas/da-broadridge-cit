@@ -139,6 +139,24 @@ export default async function decorate(block) {
 
   const navSections = nav.querySelector('.nav-sections');
   if (navSections) {
+    // mark the link matching the current page (source highlights it in accent-blue)
+    const currentPath = window.location.pathname.replace(/\/$/, '');
+    navSections.querySelectorAll(':scope a[href]').forEach((a) => {
+      const href = a.getAttribute('href') || '';
+      // skip in-page anchors and modal triggers (e.g. #talk-to-us) — a hash-only
+      // href resolves to the current path and would falsely match every page.
+      if (!href || href.startsWith('#')) return;
+      let linkPath;
+      try {
+        linkPath = new URL(a.href, window.location).pathname.replace(/\/$/, '');
+      } catch {
+        return;
+      }
+      if (linkPath && linkPath === currentPath) {
+        a.classList.add('nav-active');
+        a.setAttribute('aria-current', 'page');
+      }
+    });
     navSections.querySelectorAll(':scope .default-content-wrapper > ul > li').forEach((navSection) => {
       if (navSection.querySelector('ul')) navSection.classList.add('nav-drop');
       navSection.addEventListener('click', () => {

@@ -157,3 +157,106 @@ automatically.
 
 Default `0.001` (0.1% of pixels), with pixelmatch `threshold: 0.1` + `includeAA: false` to suppress
 anti-aliasing noise. Tune per project via `--threshold`.
+
+## Element-by-element audit (`broadridge:audit:blocks`)
+
+The pixel diff answers "do these look the same?" but for **migration parity** the % is always high (different
+implementations), so it can't tell you *what* differs. The block audit works the way a QA reviewer does —
+**down a component element by element** on the real legacy and migrated pages, at mobile/tablet/desktop, from
+computed styles (not source markup, which the pipeline mutates).
+
+> **The hand-written per-block spec engine is retired.** `broadridge:audit:blocks` is now a thin orchestrator
+> (`broadridge-block-audit.mjs`) that drives the **generic content-anchored comparator** (below) across every
+> block target in `broadridge-visual.config.json`. There are no more `captureLive`/`captureEds` functions to
+> maintain — the generic engine covers every block with zero per-block code and is a superset of the old checks:
+> style drift, WCAG contrast, **alignment**, **layout composition**, **section transitions**, and **hover
+> state**, plus content-completeness (missing/added nodes) and the cross-viewport pivot.
+
+### Adding a block to the audit — add a config target, not code
+
+```jsonc
+// tools/quality/broadridge-visual.config.json → targets[]
+{ "edsPath": "/cit", "livePath": "/cit", "edsSelector": ".my-block", "liveSelector": ".legacy-root" }
+```
+Then `npm run broadridge:audit:blocks -- --block my-block` (or run all targets with no `--block`). Each target
+produces `visual-output/audit-<block>.md`. No JavaScript to write — the generic engine handles capture, matching,
+and every check category.
+
+### What it checks (all via the generic engine)
+
+- **Style drift** per matched node — `color`, `font-size`/`weight`, `line-height`, `letter-spacing`,
+  `text-transform`, `text-decoration`, `background-color`, `border-radius`, `text-align`.
+- **WCAG contrast** — text vs *effective* background (walks ancestors, reads through `::before`/`::after`
+  bands, skips text-over-photo so there are no false fails).
+- **Alignment** — which side of the root each matched node sits on; catches *mirrored* layouts (e.g. a mobile
+  hamburger that moved left↔right). Uses `horizontalSide()`.
+- **Layout composition** — `layoutRelation()`: are the lead text and first list/link cluster *beside* vs
+  *below* each other (a stacked-vs-columns regression the property diff can't see).
+- **Section transitions** (page mode) — `auditSectionTransitions()`: unintended white band/gap between colored
+  sections, and empty section shells that still occupy space.
+- **Hover state** (desktop) — real pointer move over interactive nodes; flags links/buttons with no hover
+  affordance. (Synthetic MouseEvents don't trigger `:hover`, so it uses `page.mouse.move`.)
+
+The pure helpers (`isColoredBand`, `horizontalSide`, `auditSectionTransitions`, `layoutRelation`, `renderMode`,
+`matchNodes`, `diffMatchedNode`, …) live in `lib/style-audit-utils.mjs` and are unit-tested
+(`test/style-audit-utils.test.js`). Severity (🔴/🟡/🟢) is auto-classified by `classify()`; record intentional
+deviations in the allowlist (`visual-diff-allowlist.json` → `compare`) rather than fighting the label.
+
+## Generic content-anchored compare (`broadridge:compare`) — the one engine
+
+`broadridge-visual-compare.mjs` is the single comparison engine (the block audit above orchestrates it). It
+compares **any** two subtrees with no per-block code by matching nodes on **content** (role + normalized text)
+instead of selectors. The two DOMs are unrelated (legacy markup vs clean EDS) but the text is the same, so
+`"Collective Investment Trusts"` matches `"Collective Investment Trusts"` regardless of class names.
+
+It reports three things at once, selector-free:
+- **Style drift** on matched pairs (typography, color, box — via `classify()`, negligible deltas dropped).
+- **Missing content** — a source node with no migrated match (this is how the footer's dropped description
+  paragraph would be caught automatically).
+- **Added content** — migration-only nodes.
+
+Matching uses an **LCS** over content fingerprints (`matchNodes`), so a single insertion/deletion doesn't
+cascade into a wall of false mismatches (the failure mode of index-based matching). A **silent-mismatch guard**
+treats an empty/​not-found subtree as 🔴, never a pass.
+
+### Two modes
+
+```bash
+# block/region mode (LOW NOISE — recommended): one selector on each side
+npm run broadridge:compare -- --source-selector ".et_pb_fullwidth_header" --dest-selector ".hero-banner" --path /cit
+
+# whole-page mode (BROAD — needs allowlist tuning): source main vs migrated main
+npm run broadridge:compare -- --page /cit
+
+# gate a run (exit non-zero on unexplained 🔴 / missing content)
+npm run broadridge:compare -- --source-selector "footer" --dest-selector "footer" --path /cit --strict
+```
+
+### Precision vs coverage — pick the mode deliberately
+
+- **Selector/region mode is production-ready and low-noise** — pointed at two matching subtrees it aligns
+  cleanly (the hero run matched 100% and surfaced exactly one real finding, the H1 weight). Use this for
+  block-level parity when you know the two selectors.
+- **Page mode is broad but noisier** — role-keyed matching stumbles on heading-level shifts (h3→h4), links that
+  wrap heading text (captured as one long string), and structural asymmetry (nav links live in different DOM
+  spots). Treat its output as a *worklist*, and record genuine intentional deviations in the allowlist rather
+  than chasing every row.
+
+### Allowlist
+
+Accepted deviations live in `tools/quality/visual-diff-allowlist.json` under a `compare` array; each entry is
+`{ "kind": "missing" | "added", "textMatch": "<substring>" }` (matched case-insensitively on normalized text).
+Use it for intentional differences — e.g. the source's live stock ticker (excluded on purpose) or a subhead the
+source hides at a given viewport.
+
+### When to use which
+
+| Need | Tool |
+|---|---|
+| All configured block targets in one run | `broadridge:audit:blocks` (orchestrates the generic engine over config targets) |
+| One block/region, know both selectors | `broadridge:compare --source-selector … --dest-selector …` |
+| Whole-page content-completeness sweep (any page) | `broadridge:compare --page` |
+| "Do the pixels look the same?" visual backstop | `broadridge:test:visual` (pixel diff) |
+
+The pure helpers (`normalizeText`, `roleOf`, `fingerprint`, `matchNodes`, `diffMatchedNode`) live in
+`lib/style-audit-utils.mjs` and are unit-tested.

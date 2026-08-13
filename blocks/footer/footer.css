@@ -2,16 +2,37 @@ footer {
   background-color: var(--brand-navy);
   color: var(--background-color);
   font-size: var(--body-font-size-xs);
+
+  /* vertical rhythm lives on the bar (matches source .footer__main-nav 60/50);
+     horizontal inset lives on the inner max-width container below */
+  padding: 60px 0 0;
+  overflow: hidden; /* contain the full-bleed sub-bar; guards against h-scroll */
 }
 
 footer .footer > div {
   margin: auto;
   max-width: 1200px;
-  padding: 48px 24px 24px;
+  padding: 0 24px;
 }
 
 footer .footer p {
   margin: 0;
+}
+
+/* brand-intro band: Ready-for-Next logo + company description (source: white 18px/27px) */
+footer .footer .footer-brand-intro img {
+  width: 240px;
+  max-width: 100%; /* never overflow the bar on narrow devices */
+  height: auto;
+  margin: 0 0 20px;
+}
+
+footer .footer .footer-brand-intro p {
+  max-width: 720px;
+  margin: 0;
+  font-size: var(--body-font-size-s);
+  line-height: 1.5;
+  color: var(--background-color);
 }
 
 /* headings for each link group */
@@ -48,6 +69,44 @@ footer .footer a:focus-visible {
   text-decoration: underline;
 }
 
+footer .footer .icon img,
+footer .footer img.icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* social profile links: rendered as brand-glyph icons (source shows icons, not
+   the network name). The text label is kept for screen readers, visually hidden. */
+footer .footer a.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+footer .footer a.footer-social-link .icon,
+footer .footer a.footer-social-link .icon img {
+  width: 20px;
+  height: 20px;
+}
+
+footer .footer .footer-social-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* source icons do not recolor on hover — keep them steady */
+footer .footer a.footer-social-link:hover,
+footer .footer a.footer-social-link:focus-visible {
+  color: var(--background-color);
+  text-decoration: none;
+}
+
 /* legal placeholder links: no real destination yet — inert, not clickable */
 footer .footer a.footer-legal-placeholder {
   cursor: default;
@@ -57,12 +116,6 @@ footer .footer a.footer-legal-placeholder:hover,
 footer .footer a.footer-legal-placeholder:focus-visible {
   color: var(--background-color);
   text-decoration: none;
-}
-
-footer .footer .icon img,
-footer .footer img.icon {
-  width: 24px;
-  height: 24px;
 }
 
 /* link-group columns (wrapped by footer.js decorator) */
@@ -78,8 +131,65 @@ footer .footer img.icon {
   }
 }
 
+/* desktop: description (left) beside link columns (right) — matches source */
 @media (width >= 900px) {
+  /* vertical rhythm stays on the footer bar; only widen the horizontal inset */
   footer .footer > div {
-    padding: 56px 32px 24px;
+    padding: 0 32px;
   }
+
+  footer .footer .footer-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 64px;
+  }
+
+  footer .footer .footer-top > .section {
+    margin: 0;
+  }
+
+  /* description column: narrow, on the left (source ~350px) */
+  footer .footer .footer-top .footer-brand-intro {
+    flex: 0 1 380px;
+  }
+
+  footer .footer .footer-brand-intro p {
+    max-width: 380px;
+  }
+
+  /* link columns: pushed to the right */
+  footer .footer .footer-top .footer-nav {
+    flex: 0 0 auto;
+  }
+
+  /* copyright/legal row: right-aligned on desktop (matches source) */
+  footer .footer .default-content-wrapper:not(.footer-brand-intro, .footer-nav) {
+    text-align: right;
+  }
+}
+
+/* bottom row (social + copyright + legal) — darker full-bleed band like source.
+   Placed last so the p/a-ending selectors sit after their base rules. */
+footer .footer .footer-bottom {
+  position: relative;
+  margin-top: 40px;
+  padding: 24px 0 28px;
+}
+
+footer .footer .footer-bottom::before {
+  content: '';
+  position: absolute;
+  inset: 0 -100vw; /* extend the band across the full viewport width */
+  z-index: -1;
+  background-color: var(--brand-navy-deep);
+}
+
+/* copyright + legal text: source renders these in muted slate at ~12px */
+footer .footer .footer-bottom p:not(:has(a.footer-social-link)) {
+  color: var(--footer-link-color);
+  font-size: 12px;
+}
+
+footer .footer .footer-bottom a:not(.footer-social-link):any-link {
+  color: var(--footer-link-color);
 }

@@ -53,5 +53,12 @@
       "Legal footer links are placeholders (# / no destination) pending real URLs from Broadridge.",
       "Hero adds a navy scrim over the photo for text legibility (source relies on the image being dark)."
     ]
+  },
+  "compare": {
+    "_note": "Accepted deviations for the generic content-anchored engine (broadridge-visual-compare.mjs). Each entry: { kind: 'missing'|'added', textMatch: <substring>, reason }. Matched case-insensitively on normalized node text.",
+    "entries": [
+      { "kind": "missing", "textMatch": "BR (NYSE)", "reason": "Live stock ticker — dynamic data, intentionally not migrated as static content." },
+      { "kind": "added", "textMatch": "cost-effective approach to diversified", "reason": "Hero subhead — source hides it at desktop; migration shows it consistently across viewports (an improvement)." }
+    ]
   }
 }

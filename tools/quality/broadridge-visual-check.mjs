@@ -151,6 +151,9 @@ function padTo(src, W, H) {
 }
 
 const rows = [];
+// In fullpage scope the selector is ignored, so several block targets sharing one
+// edsPath would diff the identical whole page repeatedly — dedupe by path+viewport.
+const seenFullpage = new Set();
 const browser = await chromium.launch();
 try {
   for (const target of manifest) {
@@ -165,6 +168,11 @@ try {
       const vp = VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }
       const label = `${edsPath} @ ${vpName}`;
+      if (scope === 'fullpage') {
+        const key = `${edsPath}@${vpName}`;
+        if (seenFullpage.has(key)) continue; // same page already diffed at this viewport
+        seenFullpage.add(key);
+      }
       const srcPath = (mode === 'parity') ? livePath : edsPath; // base side path
       const baseUrl = target.base || (base ? stripTrailing(base) + srcPath : null);
       const candUrl = target.candidate || (candidate ? stripTrailing(candidate) + edsPath : null);
@@ -209,13 +217,18 @@ try {
       const diff = new PNG({ width: W, height: H });
       const changed = pixelmatch(bp.data, cp.data, diff.data, W, H, { threshold: 0.1, includeAA: false });
       const ratio = changed / (W * H);
-      const stem = join(outDir, `${slug(edsPath)}-${vpName}`);
+      // In block scope, several targets can share an edsPath (one page, many blocks),
+      // so the filename stem must include the block/selector or they overwrite each other.
+      const blockTag = scope === 'block' ? `-${slug(target.block || cliBlock || candSel || 'block')}` : '';
+      const stem = join(outDir, `${slug(edsPath)}${blockTag}-${vpName}`);
+      const fileBase = `${slug(edsPath)}${blockTag}-${vpName}`;
       writeFileSync(`${stem}-${baseLabel}.png`, PNG.sync.write(bp));
       writeFileSync(`${stem}-${candLabel}.png`, PNG.sync.write(cp));
       writeFileSync(`${stem}-diff.png`, PNG.sync.write(diff));
       const status = ratio > threshold ? 'CHANGED' : 'ok';
-      rows.push({ label, status, ratio, files: `${slug(edsPath)}-${vpName}-{${baseLabel},${candLabel},diff}.png` });
-      console.log(`${status === 'CHANGED' ? '✗' : '✓'} ${label} — ${(ratio * 100).toFixed(3)}% diff`);
+      const rowLabel = scope === 'block' ? `${label} [${target.block || candSel}]` : label;
+      rows.push({ label: rowLabel, status, ratio, files: `${fileBase}-{${baseLabel},${candLabel},diff}.png` });
+      console.log(`${status === 'CHANGED' ? '✗' : '✓'} ${rowLabel} — ${(ratio * 100).toFixed(3)}% diff`);
     }
   }
 } finally {
