@@ -37,6 +37,7 @@ import process from 'node:process';
 import {
   matchNodes, diffMatchedNode, normalizeText,
   contrastRatio, wcagAAThreshold,
+  horizontalSide, layoutRelation, auditSectionTransitions,
 } from './lib/style-audit-utils.mjs';
 
 let chromium;
@@ -175,10 +176,28 @@ async function capture(pageObj, selector) {
         effectiveBg: effBg,
       });
     });
+    const rb = root.getBoundingClientRect();
+    // section descriptors (for the section-transition check) — only meaningful for
+    // a page-level root, where `main > .section` exists.
+    const sections = [...document.querySelectorAll('main > .section')].map((s) => {
+      const cs = getComputedStyle(s);
+      const b = s.getBoundingClientRect();
+      return {
+        top: b.top,
+        bottom: b.bottom,
+        height: b.height,
+        bg: cs.backgroundColor,
+        marginTop: parseFloat(cs.marginTop) || 0,
+        marginBottom: parseFloat(cs.marginBottom) || 0,
+        empty: s.children.length === 0 && s.textContent.trim() === '',
+      };
+    });
     return {
       found: true,
       rootTag: `${root.tagName}.${(root.className || '').toString().trim().split(/\s+/)[0] || ''}`,
+      rootCenterX: Math.round(rb.x + rb.width / 2),
       nodes,
+      sections,
     };
   }, selector || null);
 }
@@ -206,6 +225,48 @@ try {
 
     const src = await capture(srcPage, sourceSelector);
     const mig = await capture(migPage, destSelector);
+
+    // Hover-state check (desktop only — hover doesn't vary by viewport). For a
+    // bounded set of interactive nodes on the migrated side, does the resting
+    // style change on :hover? Generic version of the hand-spec `hover` list — it
+    // confirms links/buttons have SOME hover affordance rather than being inert.
+    // Uses REAL pointer movement (page.mouse.move) — synthetic MouseEvents do not
+    // trigger the CSS :hover pseudo-class, so dispatching events would be useless.
+    let hoverRows = [];
+    if (vpName === 'desktop' && mig.found) {
+      // collect bounded interactive targets: center point + resting style
+      const targets = await migPage.evaluate((rootSel) => {
+        const root = rootSel ? document.querySelector(rootSel) : (document.querySelector('main') || document.body);
+        if (!root) return [];
+        return [...root.querySelectorAll('a[href], button')]
+          .map((el) => { const r = el.getBoundingClientRect(); return { el, r }; })
+          .filter(({ r, el }) => r.width > 1 && r.height > 1 && el.textContent.trim())
+          .slice(0, 12)
+          .map(({ el, r }, i) => {
+            el.setAttribute('data-hover-probe', String(i));
+            const c = getComputedStyle(el);
+            return {
+              i, label: el.textContent.trim().slice(0, 28), cx: Math.round(r.x + r.width / 2), cy: Math.round(r.y + r.height / 2), before: `${c.color}|${c.backgroundColor}|${c.textDecorationLine}`,
+            };
+          });
+      }, destSelector || null);
+      for (const t of targets) {
+        try {
+          await migPage.mouse.move(t.cx, t.cy);
+          // eslint-disable-next-line no-await-in-loop
+          await migPage.waitForTimeout(60);
+          // eslint-disable-next-line no-await-in-loop
+          const after = await migPage.evaluate((idx) => {
+            const el = document.querySelector(`[data-hover-probe="${idx}"]`);
+            if (!el) return null;
+            const c = getComputedStyle(el);
+            return `${c.color}|${c.backgroundColor}|${c.textDecorationLine}`;
+          }, t.i);
+          hoverRows.push({ label: t.label, changed: after != null && after !== t.before });
+        } catch { hoverRows.push({ label: t.label, changed: false, error: true }); }
+      }
+    }
+
     await srcPage.close();
     await migPage.close();
 
@@ -251,6 +312,42 @@ try {
         }
       }
     }
+
+    // Alignment: for each matched node, which side of the root it sits on — flags
+    // mirrored layouts (e.g. a control that moved left↔right). Generic version of
+    // the hand-spec `alignmentPairs`, keyed on matched content.
+    const alignmentRows = [];
+    for (const pair of pairs) {
+      const sSide = horizontalSide(pair.source.box.x + pair.source.box.w / 2, src.rootCenterX);
+      const mSide = horizontalSide(pair.migrated.box.x + pair.migrated.box.w / 2, mig.rootCenterX);
+      if (sSide && mSide && sSide !== mSide) {
+        alignmentRows.push({
+          node: `${pair.source.role} "${(pair.source.text || pair.source.src || '').slice(0, 28)}"`,
+          source: sSide,
+          migrated: mSide,
+        });
+      }
+    }
+
+    // Layout composition: relation between the first two DISTINCT-region anchors
+    // (first heading vs first list/link cluster) on each side — beside vs below.
+    // Generic version of the hand-spec `regionPairs`/`layoutRelation`.
+    const layoutRows = [];
+    const anchorPair = (nodes) => {
+      const a = nodes.find((n) => /^heading/.test(n.role) || n.role === 'text');
+      const bNode = nodes.find((n) => (n.role === 'listitem' || n.role === 'link') && n !== a);
+      return a && bNode ? [a, bNode] : null;
+    };
+    const sa = anchorPair(src.nodes);
+    const ma = anchorPair(mig.nodes);
+    if (sa && ma) {
+      const sRel = layoutRelation(sa[0].box, sa[1].box);
+      const mRel = layoutRelation(ma[0].box, ma[1].box);
+      if (sRel !== mRel) {
+        layoutRows.push({ aspect: 'lead text vs first list/link cluster', source: sRel || 'n/a', migrated: mRel || 'n/a' });
+      }
+    }
+
     rows.push({
       vpName,
       srcCount: src.nodes.length,
@@ -263,6 +360,10 @@ try {
       styleRows,
       inventory,
       contrastRows,
+      alignmentRows,
+      layoutRows,
+      hoverRows,
+      sectionIssues: pageMode ? auditSectionTransitions(mig.sections || []) : [],
       matchRate: pairs.length / Math.max(1, src.nodes.length),
     });
   }
@@ -293,14 +394,15 @@ let contrastFails = 0;
 
 // ---- summary matrix (per viewport) ----
 md += '## Summary\n\n';
-md += '| Viewport | Src nodes | Mig nodes | Matched | Match rate | Style drift (🔴/🟡) | Missing | Added | Contrast fails |\n';
-md += '|---|---|---|---|---|---|---|---|---|\n';
+md += '| Viewport | Src nodes | Mig nodes | Matched | Match rate | Style drift (🔴/🟡) | Missing | Added | Contrast fails | Align | Layout | Section | No-hover |\n';
+md += '|---|---|---|---|---|---|---|---|---|---|---|---|---|\n';
 for (const r of rows) {
-  if (r.fatal) { md += `| ${r.vpName} | — | — | — | — | — | — | — | 🔴 ${cell(r.fatal)} |\n`; continue; }
+  if (r.fatal) { md += `| ${r.vpName} | — | — | — | — | — | — | — | 🔴 ${cell(r.fatal)} | — | — | — | — |\n`; continue; }
   const red = r.styleRows.filter((s) => s.icon === '🔴').length;
   const yellow = r.styleRows.filter((s) => s.icon === '🟡').length;
   const cFail = r.contrastRows.filter((c) => c.pass === false).length;
-  md += `| ${r.vpName} | ${r.srcCount} | ${r.migCount} | ${r.matched} | ${(r.matchRate * 100).toFixed(0)}% | ${red}/${yellow} | ${realMissingOf(r).length} | ${realAddedOf(r).length} | ${cFail} |\n`;
+  const noHover = (r.hoverRows || []).filter((h) => !h.changed && !h.error).length;
+  md += `| ${r.vpName} | ${r.srcCount} | ${r.migCount} | ${r.matched} | ${(r.matchRate * 100).toFixed(0)}% | ${red}/${yellow} | ${realMissingOf(r).length} | ${realAddedOf(r).length} | ${cFail} | ${r.alignmentRows.length} | ${r.layoutRows.length} | ${(r.sectionIssues || []).length} | ${noHover} |\n`;
 }
 md += `\nMatched elements — source root \`${rows.find((r) => r.srcRoot)?.srcRoot || '?'}\` → migrated root \`${rows.find((r) => r.migRoot)?.migRoot || '?'}\`\n\n`;
 
@@ -334,6 +436,30 @@ for (const r of rows) {
     const f = ensure(`contrast · ${c.node}`, `contrast: ${c.node} (${c.side})`);
     f.cells[r.vpName] = `${c.ratio}<${c.threshold}`;
     bumpSev(f, '🔴');
+  }
+  // alignment mismatch (mirrored layout) → side pair per viewport
+  for (const a of r.alignmentRows) {
+    const f = ensure(`align · ${a.node}`, `alignment: ${a.node}`);
+    f.cells[r.vpName] = `${a.source}→${a.migrated}`;
+    bumpSev(f, '🔴');
+  }
+  // layout composition (beside vs below) → relation pair per viewport
+  for (const l of r.layoutRows) {
+    const f = ensure(`layout · ${l.aspect}`, `layout: ${l.aspect}`);
+    f.cells[r.vpName] = `${l.source}→${l.migrated}`;
+    bumpSev(f, '🔴');
+  }
+  // section transitions (page mode) → the smell per viewport
+  for (const si of r.sectionIssues || []) {
+    const f = ensure(`section · ${si.kind} · ${si.between || si.at}`, `section: ${si.kind} @ ${si.between || `#${si.at}`}`);
+    f.cells[r.vpName] = si.detail.slice(0, 24);
+    bumpSev(f, si.severity);
+  }
+  // hover: matched interactive nodes that show NO hover affordance (advisory 🟡)
+  for (const h of (r.hoverRows || []).filter((x) => !x.changed && !x.error)) {
+    const f = ensure(`hover · ${h.label}`, `hover: “${h.label}” no state change`);
+    f.cells[r.vpName] = 'no hover';
+    bumpSev(f, '🟡');
   }
 }
 // only show findings that actually diverge somewhere (skip all-🟢 noise)
@@ -389,7 +515,27 @@ for (const r of rows) {
     }
     md += '\n';
   }
-  if (!realMissing.length && !realAdded.length && !r.styleRows.length) md += '✓ no content or style divergence\n\n';
+  if (r.alignmentRows.length) {
+    md += '**Alignment (which side of the root — mirrored layouts)**\n\n| Node | Source | Migrated | Result |\n|---|---|---|---|\n';
+    for (const a of r.alignmentRows) { hardFindings += 1; md += `| ${cell(a.node)} | ${a.source} | ${a.migrated} | 🔴 mirrored |\n`; }
+    md += '\n';
+  }
+  if (r.layoutRows.length) {
+    md += '**Layout composition (relative position)**\n\n| Aspect | Source | Migrated | Result |\n|---|---|---|---|\n';
+    for (const l of r.layoutRows) { hardFindings += 1; md += `| ${cell(l.aspect)} | ${l.source} | ${l.migrated} | 🔴 differs |\n`; }
+    md += '\n';
+  }
+  if ((r.sectionIssues || []).length) {
+    md += '**Section transitions (page)**\n\n| Kind | Where | Severity | Detail |\n|---|---|---|---|\n';
+    for (const si of r.sectionIssues) md += `| ${si.kind} | ${si.between || `#${si.at}`} | ${si.severity} | ${cell(si.detail)} |\n`;
+    md += '\n';
+  }
+  if (r.hoverRows && r.hoverRows.length) {
+    md += '**Hover state (desktop — migrated interactive nodes)**\n\n| Node | Hover changes style? |\n|---|---|\n';
+    for (const h of r.hoverRows) md += `| ${cell(h.label)} | ${h.error ? '⚠️ error' : (h.changed ? '✅ yes' : '— none')} |\n`;
+    md += '\n';
+  }
+  if (!realMissing.length && !realAdded.length && !r.styleRows.length && !r.alignmentRows.length && !r.layoutRows.length) md += '✓ no content, style, or layout divergence\n\n';
 }
 
 mkdirSync(outDir, { recursive: true });
