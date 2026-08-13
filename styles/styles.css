@@ -22,12 +22,24 @@
   /* brand palette */
   --brand-blue: #0050ae;
   --brand-navy: #001f5a;
+  --brand-navy-deep: #00102d; /* footer social sub-bar */
   --brand-accent: #40b8ff;
   --brand-check: #2e8b57; /* "CITs are" green check */
   --brand-cross: #c0392b; /* "CITs are not" red X */
 
+  /* secondary text — extracted across /cit */
+  --text-muted: #4d5863; /* subheads, subadvisor names */
+  --footer-link-color: #698791; /* footer + legal link row */
+
+  /* surfaces — alternating section backgrounds on the source */
+  --surface-cool-1: #ebeef2; /* welcome / CTA sections */
+  --surface-cool-2: #f0f2f6; /* characteristics / compare */
+  --surface-cta-line: #f1f1f1; /* full-width CTA strip */
+  --table-row-bg: #fafafa; /* fund-table zebra row */
+  --table-header-bg: #f5f5f5; /* fund-table header */
+
   /* neutral borders */
-  --border-color: #dadada; /* default hairline (cards, footer dividers) */
+  --border-color: #ddd; /* default hairline (cards, footer dividers, tables) */
   --border-color-strong: #999; /* form field outlines */
 
   /* fonts — brand uses proprietary FreightSans; use a humanist sans fallback stack */
@@ -50,15 +62,75 @@
   --heading-font-size-s: 22px;
   --heading-font-size-xs: 18px;
 
+  /* interaction tokens — extracted across /cit */
+  --button-radius: 2px; /* brand CTA corner */
+  --button-letter-spacing: 2px; /* "TALK TO US" CTA */
+  --nav-letter-spacing: 1.5px; /* uppercase nav links */
+
   /* nav height */
   --nav-height: 80px;
 }
 
-/* fallback font for the proprietary FreightSans stack */
+/*
+ * Metric-matched fallback for the proprietary FreightSans Pro family.
+ * No licensed FreightSans binaries are committed (see styles/fonts.css). These
+ * faces render a locally-available sans (Arial / Liberation Sans / Helvetica)
+ * but override size-adjust + ascent/descent so the fallback occupies the SAME
+ * line box and advance width as FreightSans — eliminating layout shift (CLS)
+ * and keeping line wrapping identical to the source. Metrics were measured from
+ * broadridge.com/cit against Arial; FreightSans is ~23-25% narrower and its
+ * width varies by weight, so each source face gets its own tuned block.
+ * Weight ranges map to the source faces:
+ *   1-349    -> FreightSans Pro Light    (light headings, hero H1)
+ *   350-549  -> FreightSans Pro Book     (body copy)
+ *   550-649  -> FreightSans Pro Medium
+ *   650-1000 -> FreightSans Pro Semibold (buttons, footer link-group titles)
+ * When a licensed FreightSans web font is available, self-host it as family
+ * `freightsans` (first in --body-font-family) and these faces become the
+ * fallback that shows until it loads — no other change required.
+ */
 @font-face {
   font-family: freightsans-fallback;
-  size-adjust: 96%;
-  src: local('Helvetica'), local('Arial');
+  font-weight: 1 349;
+  font-display: swap;
+  size-adjust: 87.26%;
+  ascent-override: 107.72%;
+  descent-override: 36.67%;
+  line-gap-override: 0%;
+  src: local('Arial'), local('Liberation Sans'), local('Helvetica'), url('/fonts/arimo-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: freightsans-fallback;
+  font-weight: 350 549;
+  font-display: swap;
+  size-adjust: 89.12%;
+  ascent-override: 105.48%;
+  descent-override: 35.91%;
+  line-gap-override: 0%;
+  src: local('Arial'), local('Liberation Sans'), local('Helvetica'), url('/fonts/arimo-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: freightsans-fallback;
+  font-weight: 550 649;
+  font-display: swap;
+  size-adjust: 85.61%;
+  ascent-override: 109.8%;
+  descent-override: 37.38%;
+  line-gap-override: 0%;
+  src: local('Arial'), local('Liberation Sans'), local('Helvetica'), url('/fonts/arimo-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: freightsans-fallback;
+  font-weight: 650 1000;
+  font-display: swap;
+  size-adjust: 88.32%;
+  ascent-override: 106.43%;
+  descent-override: 36.23%;
+  line-gap-override: 0%;
+  src: local('Arial'), local('Liberation Sans'), local('Helvetica'), url('/fonts/arimo-latin-700-normal.woff2') format('woff2');
 }
 
 @media (width >= 900px) {
@@ -198,12 +270,12 @@ button.button {
   max-width: 100%;
   margin: 0;
   border: 2px solid transparent;
-  border-radius: 2px;
+  border-radius: var(--button-radius);
   padding: 0.75em 1.6em;
   font: inherit;
   font-weight: 700;
   line-height: 1.25;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--button-letter-spacing);
   text-decoration: none;
   cursor: pointer;
   overflow: hidden;
@@ -320,6 +392,13 @@ main > .section {
   margin: 40px 0;
 }
 
+/* Empty section shells (e.g. the wrapper left behind after the page `metadata`
+   block is extracted into <head>) still carry the 40px margins above, leaving a
+   phantom gap. Collapse any section with no content. */
+main > .section:empty {
+  margin: 0;
+}
+
 main > .section > div {
   max-width: 1200px;
   margin: auto;
@@ -336,11 +415,9 @@ main > .section:first-of-type {
   }
 }
 
-/* section metadata */
-main .section.light,
-main .section.highlight,
+/* section metadata — `light-grey` is the only authored section style on /cit */
 main .section.light-grey {
-  background-color: var(--light-color);
+  background-color: var(--surface-cool-2);
   margin: 0;
   padding: 40px 0;
 }
