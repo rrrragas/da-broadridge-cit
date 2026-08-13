@@ -11,11 +11,14 @@ header .nav-wrapper {
 header nav {
   box-sizing: border-box;
   display: grid;
+
+  /* mobile: logo left, tools, hamburger right — matches source (source puts the
+     hamburger on the right; the boilerplate default had it on the left) */
   grid-template:
-    'hamburger brand tools' var(--nav-height)
-    'sections sections sections' 1fr / auto 1fr auto;
+    'brand tools hamburger' var(--nav-height)
+    'sections sections sections' 1fr / 1fr auto auto;
   align-items: center;
-  gap: 0 24px;
+  gap: 0 16px;
   margin: auto;
   max-width: 1248px;
   height: var(--nav-height);
@@ -25,9 +28,9 @@ header nav {
 
 header nav[aria-expanded='true'] {
   grid-template:
-    'hamburger brand' var(--nav-height)
+    'brand hamburger' var(--nav-height)
     'sections sections' 1fr
-    'tools tools' var(--nav-height) / auto 1fr;
+    'tools tools' var(--nav-height) / 1fr auto;
   overflow-y: auto;
   min-height: 100dvh;
 }
@@ -151,7 +154,7 @@ header .nav-brand {
 }
 
 header nav .nav-brand img {
-  width: 200px;
+  width: 150px; /* source mobile logo ~150px; 200px crowded the bar */
   height: auto;
 }
 
@@ -287,6 +290,11 @@ header nav .nav-sections a:any-link {
 
 header nav .nav-sections a:hover,
 header nav .nav-sections .nav-drop:hover {
+  color: var(--brand-accent);
+}
+
+/* current-page link — source highlights the active nav item in accent-blue */
+header nav .nav-sections a.nav-active:any-link {
   color: var(--brand-accent);
 }
 

@@ -2,4 +2,5 @@ helix-importer-ui
 *.min.js
 tools/
 test/
+migration-work/
 vitest.config.mjs

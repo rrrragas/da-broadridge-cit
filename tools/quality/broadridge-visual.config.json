@@ -20,6 +20,18 @@
       "livePath": "/cit",
       "edsSelector": ".hero-banner",
       "liveSelector": ".et_pb_fullwidth_header"
+    },
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": "header",
+      "liveSelector": "header"
+    },
+    {
+      "edsPath": "/cit",
+      "livePath": "/cit",
+      "edsSelector": "footer",
+      "liveSelector": "footer"
     }
   ]
 }

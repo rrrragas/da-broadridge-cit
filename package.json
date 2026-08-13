@@ -19,7 +19,8 @@
     "broadridge:test:a11y": "node tools/quality/broadridge-a11y-check.mjs",
     "broadridge:test:visual": "node tools/quality/broadridge-visual-check.mjs",
     "broadridge:visual:all": "node tools/quality/broadridge-visual-all.mjs",
-    "broadridge:audit:blocks": "node tools/quality/broadridge-block-audit.mjs"
+    "broadridge:audit:blocks": "node tools/quality/broadridge-block-audit.mjs",
+    "broadridge:compare": "node tools/quality/broadridge-visual-compare.mjs"
   },
   "repository": {
     "type": "git",

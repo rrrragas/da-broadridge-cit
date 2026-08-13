@@ -29,7 +29,9 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
-import { classify, contrastRatio, wcagAAThreshold } from './lib/style-audit-utils.mjs';
+import {
+  classify, contrastRatio, wcagAAThreshold, horizontalSide, auditSectionTransitions, layoutRelation, renderMode,
+} from './lib/style-audit-utils.mjs';
 
 let chromium;
 try {
@@ -317,6 +319,230 @@ const BLOCKS = {
       { side: 'live', selector: '.form__field__input--button', prop: 'background-color' },
     ],
   },
+
+  // header: fragment-loaded nav. Beyond colors/type this also measures element
+  // ALIGNMENT (which side of the bar the logo and hamburger sit on) — a mirrored
+  // mobile layout is invisible to a property-only diff, and was missed manually.
+  header: {
+    async captureLive(page) {
+      return page.evaluate(() => {
+        const g = (el, p) => (el ? getComputedStyle(el).getPropertyValue(p) : null);
+        const bar = document.querySelector('header');
+        const barBox = bar ? bar.getBoundingClientRect() : null;
+        const logo = bar && bar.querySelector('img');
+        // resting (non-active) top-level nav link + the active/current one
+        const links = bar ? [...bar.querySelectorAll('#et-top-navigation a, .et-menu a, nav a')].filter((a) => a.textContent.trim()) : [];
+        const resting = links.find((a) => !/active|current/i.test(a.className) && !/active|current/i.test(a.closest('li')?.className || ''));
+        const active = links.find((a) => /active|current/i.test(a.className) || /active|current/i.test(a.closest('li')?.className || ''));
+        // hamburger toggle (mobile)
+        const burger = bar && bar.querySelector('.mobile_nav, .mobile_menu_bar, [class*="hamburger" i], .et_pb_menu__toggle');
+        const centerX = (el) => { const b = el && el.getBoundingClientRect(); return b ? b.x + b.width / 2 : null; };
+        return {
+          info: {
+            root: bar ? `${bar.tagName}` : 'missing',
+            active: active ? active.textContent.trim().slice(0, 16) : 'none',
+          },
+          props: {
+            barBg: bar && g(bar, 'background-color'),
+            barHeight: barBox ? Math.round(barBox.height) : null,
+            logoWidth: logo ? Math.round(logo.getBoundingClientRect().width) : null,
+            'restingLink.color': resting && g(resting, 'color'),
+            'restingLink.fontWeight': resting && g(resting, 'font-weight'),
+            'activeLink.color': active && g(active, 'color'),
+            logoCenterX: logo ? Math.round(centerX(logo)) : null,
+            hamburgerCenterX: burger ? Math.round(centerX(burger)) : null,
+            barCenterX: barBox ? Math.round(barBox.x + barBox.width / 2) : null,
+          },
+        };
+      });
+    },
+    async captureEds(page) {
+      return page.evaluate(() => {
+        const g = (el, p) => (el ? getComputedStyle(el).getPropertyValue(p) : null);
+        const host = document.querySelector('header');
+        const bar = host && (host.querySelector('.nav-wrapper') || host);
+        const barBox = bar ? bar.getBoundingClientRect() : null;
+        const logo = host && host.querySelector('.nav-brand img');
+        const links = host ? [...host.querySelectorAll('.nav-sections a')].filter((a) => a.textContent.trim()) : [];
+        const resting = links.find((a) => !a.classList.contains('nav-active'));
+        const active = links.find((a) => a.classList.contains('nav-active'));
+        const burger = host && host.querySelector('.nav-hamburger');
+        const centerX = (el) => { const b = el && el.getBoundingClientRect(); return b ? b.x + b.width / 2 : null; };
+        return {
+          info: {
+            root: bar ? `${bar.tagName}.${bar.className}`.slice(0, 40) : 'missing',
+            active: active ? active.textContent.trim().slice(0, 16) : 'none',
+          },
+          props: {
+            barBg: bar && g(bar, 'background-color'),
+            barHeight: barBox ? Math.round(barBox.height) : null,
+            logoWidth: logo ? Math.round(logo.getBoundingClientRect().width) : null,
+            'restingLink.color': resting && g(resting, 'color'),
+            'restingLink.fontWeight': resting && g(resting, 'font-weight'),
+            'activeLink.color': active && g(active, 'color'),
+            logoCenterX: logo ? Math.round(centerX(logo)) : null,
+            hamburgerCenterX: burger ? Math.round(centerX(burger)) : null,
+            barCenterX: barBox ? Math.round(barBox.x + barBox.width / 2) : null,
+          },
+        };
+      });
+    },
+    // which side of the bar each element sits on — flagged when the sides disagree
+    alignmentPairs: [
+      { label: 'logo', centerProp: 'logoCenterX', barProp: 'barCenterX' },
+      { label: 'hamburger', centerProp: 'hamburgerCenterX', barProp: 'barCenterX' },
+    ],
+    contrastPairs: [
+      { label: 'resting nav link vs bar', textProp: 'restingLink.color', bgProp: 'barBg', fontSizeProp: 'restingLink.fontSize', fontWeightProp: 'restingLink.fontWeight' },
+    ],
+  },
+
+  // footer: fragment-loaded. Captured element-by-element the way a QA reviewer
+  // works down a component — the navy bar, each link-group heading, the nav
+  // links, the copyright/legal line, and the darker social sub-bar — with a full
+  // property set per element (color, size, weight, transform, decoration).
+  footer: {
+    async captureLive(page) {
+      // footer is below the fold — scroll so lazy content/styles resolve.
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(800);
+      return page.evaluate(() => {
+        const g = (el, p) => (el ? getComputedStyle(el).getPropertyValue(p) : null);
+        // background of an element OR its ::before/::after — full-bleed sub-bars are
+        // often drawn with a pseudo-element, which getComputedStyle(el) alone misses.
+        const bandBg = (el) => {
+          if (!el) return null;
+          const solid = (v) => v && v !== 'rgba(0, 0, 0, 0)' && v !== 'transparent';
+          const own = getComputedStyle(el).backgroundColor;
+          if (solid(own)) return own;
+          for (const pe of ['::before', '::after']) {
+            const c = getComputedStyle(el, pe).getPropertyValue('background-color');
+            if (solid(c)) return c;
+          }
+          return null;
+        };
+        const f = document.querySelector('footer, .footer, #footer');
+        // the navy bar is the main-nav band on the source (footer itself is transparent)
+        const bar = (f && f.querySelector('.footer__main-nav')) || f;
+        const heading = f && f.querySelector('.footer__nav-links__item__title');
+        const link = f && [...f.querySelectorAll('.footer__nav-links a, .footer__main-nav a')].find((a) => a.textContent.trim());
+        const copyright = f && f.querySelector('.footer__copyright');
+        const social = f && f.querySelector('.footer__social-nav');
+        // composition: description region + link-columns region (relative layout)
+        const desc = f && f.querySelector('.footer__contact');
+        const links = f && f.querySelector('.footer__nav-links');
+        const box = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }; };
+        const socialA = f && f.querySelector('.footer__social-nav a');
+        const socialInner = socialA ? (socialA.querySelector('svg, img, i') || socialA) : null;
+        return {
+          info: {
+            root: f ? `${f.tagName}.${f.className}`.slice(0, 40) : 'missing',
+            heading: heading ? heading.textContent.trim().slice(0, 24) : 'none',
+          },
+          regions: { desc: box(desc), links: box(links) },
+          social: socialA ? {
+            tag: socialInner ? socialInner.tagName.toLowerCase() : 'a',
+            hasImg: !!(socialA.querySelector('img')),
+            hasSvg: !!(socialA.querySelector('svg')),
+            beforeContent: socialInner ? getComputedStyle(socialInner, '::before').content : 'none',
+            text: socialA.textContent.trim(),
+          } : null,
+          props: {
+            barBg: g(bar, 'background-color'),
+            'heading.color': heading && g(heading, 'color'),
+            'heading.fontSize': heading && g(heading, 'font-size'),
+            'heading.fontWeight': heading && g(heading, 'font-weight'),
+            'heading.textTransform': heading && g(heading, 'text-transform'),
+            'link.color': link && g(link, 'color'),
+            'link.fontSize': link && g(link, 'font-size'),
+            'link.textDecoration': link && g(link, 'text-decoration-line'),
+            'copyright.color': copyright && g(copyright, 'color'),
+            'copyright.fontSize': copyright && g(copyright, 'font-size'),
+            'copyright.textAlign': copyright && g(copyright, 'text-align'),
+            socialBarBg: bandBg(social),
+          },
+        };
+      });
+    },
+    async captureEds(page) {
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(800);
+      return page.evaluate(() => {
+        const g = (el, p) => (el ? getComputedStyle(el).getPropertyValue(p) : null);
+        // background of an element OR its ::before/::after — full-bleed sub-bars are
+        // often drawn with a pseudo-element, which getComputedStyle(el) alone misses.
+        const bandBg = (el) => {
+          if (!el) return null;
+          const solid = (v) => v && v !== 'rgba(0, 0, 0, 0)' && v !== 'transparent';
+          const own = getComputedStyle(el).backgroundColor;
+          if (solid(own)) return own;
+          for (const pe of ['::before', '::after']) {
+            const c = getComputedStyle(el, pe).getPropertyValue('background-color');
+            if (solid(c)) return c;
+          }
+          return null;
+        };
+        const f = document.querySelector('footer');
+        // EDS puts the navy on the footer element itself
+        const bar = f;
+        const heading = f && f.querySelector('.footer-link-group h1, .footer-link-group h2, .footer-link-group h3, .footer-link-group h4, .footer-link-group h5, .footer-link-group h6');
+        const link = f && [...f.querySelectorAll('.footer-nav a')].find((a) => a.textContent.trim());
+        // copyright/legal row: the second default-content-wrapper (legal placeholders live here)
+        const copyright = f && (f.querySelector('.footer-legal-placeholder')?.closest('p, div') || f.querySelectorAll('.default-content-wrapper')[1]);
+        // EDS social sub-bar: a dedicated darker band, or the bottom row's pseudo band.
+        const social = f && (f.querySelector('.footer-social-bar') || f.querySelector('.footer-bottom'));
+        // composition: description region + link-columns region (relative layout)
+        const desc = f && (f.querySelector('.footer-brand-intro') || null);
+        const links = f && (f.querySelector('.footer-nav') || null);
+        const box = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }; };
+        const socialA = f && f.querySelector('a.footer-social-link');
+        const socialInner = socialA ? (socialA.querySelector('svg, img, i') || socialA) : null;
+        return {
+          info: {
+            root: bar ? `${bar.tagName}.${bar.className}`.slice(0, 40) : 'missing',
+            heading: heading ? heading.textContent.trim().slice(0, 24) : 'none',
+          },
+          regions: { desc: box(desc), links: box(links) },
+          social: socialA ? {
+            tag: socialInner ? socialInner.tagName.toLowerCase() : 'a',
+            hasImg: !!(socialA.querySelector('img')),
+            hasSvg: !!(socialA.querySelector('svg')),
+            beforeContent: socialInner ? getComputedStyle(socialInner, '::before').content : 'none',
+            text: socialA.textContent.trim(),
+          } : null,
+          props: {
+            barBg: g(bar, 'background-color'),
+            'heading.color': heading && g(heading, 'color'),
+            'heading.fontSize': heading && g(heading, 'font-size'),
+            'heading.fontWeight': heading && g(heading, 'font-weight'),
+            'heading.textTransform': heading && g(heading, 'text-transform'),
+            'link.color': link && g(link, 'color'),
+            'link.fontSize': link && g(link, 'font-size'),
+            'link.textDecoration': link && g(link, 'text-decoration-line'),
+            'copyright.color': copyright && g(copyright, 'color'),
+            'copyright.fontSize': copyright && g(copyright, 'font-size'),
+            'copyright.textAlign': copyright && g(copyright, 'text-align'),
+            socialBarBg: bandBg(social),
+          },
+        };
+      });
+    },
+    contrastPairs: [
+      { label: 'nav link vs bar', textProp: 'link.color', bgProp: 'barBg', fontSizeProp: 'link.fontSize' },
+      { label: 'heading vs bar', textProp: 'heading.color', bgProp: 'barBg', fontSizeProp: 'heading.fontSize', fontWeightProp: 'heading.fontWeight' },
+    ],
+    hover: [
+      { side: 'eds', selector: '.footer-nav a', prop: 'color' },
+      { side: 'live', selector: '.footer__nav-links a', prop: 'color' },
+    ],
+    // composition checks (invisible to property diffs): are the link columns
+    // BESIDE the description (source) or stacked BELOW it (regression)? and are
+    // the social links rendered as icons (source) or plain text (regression)?
+    regionPairs: [
+      { label: 'link-columns vs description', a: 'desc', b: 'links' },
+    ],
+    renderModeOf: 'social links (icon vs text)',
+  },
 };
 
 const selectedBlocks = (arg('block') || Object.keys(BLOCKS).join(',')).split(',').map((s) => s.trim()).filter(Boolean);
@@ -330,6 +556,7 @@ for (const v of selectedViewports) {
 }
 
 const results = {}; // { block: { viewport: { liveInfo, edsInfo, rows, contrastRows, hoverRows } } }
+const sectionAudit = {}; // { viewport: [issues] } — page-level section-transition smells (EDS side)
 const browser = await chromium.launch();
 
 try {
@@ -349,6 +576,26 @@ try {
     } catch { /* banner not present at this viewport/run — fine */ }
     await edsPage.goto(`${candidate}${path_}`, { waitUntil: 'networkidle', timeout: 30000 });
     await edsPage.waitForTimeout(1000);
+
+    // Page-level section-transition audit (EDS side): catches unintended white
+    // bands between sections and empty leftover section shells — layout smells
+    // the per-block property diff can't see.
+    try {
+      const sections = await edsPage.evaluate(() => [...document.querySelectorAll('main > .section')].map((s) => {
+        const cs = getComputedStyle(s);
+        const box = s.getBoundingClientRect();
+        return {
+          top: box.top,
+          bottom: box.bottom,
+          height: box.height,
+          bg: cs.backgroundColor,
+          marginTop: parseFloat(cs.marginTop) || 0,
+          marginBottom: parseFloat(cs.marginBottom) || 0,
+          empty: s.children.length === 0 && s.textContent.trim() === '',
+        };
+      }));
+      sectionAudit[vpName] = auditSectionTransitions(sections);
+    } catch { sectionAudit[vpName] = []; }
 
     for (const blockName of selectedBlocks) {
       const spec = BLOCKS[blockName];
@@ -396,29 +643,64 @@ try {
       if (vpName === 'desktop') { // hover state doesn't meaningfully vary by viewport — check once
         for (const h of spec.hover || []) {
           const targetPage = h.side === 'eds' ? edsPage : livePage;
+          // honor the property each spec declares (footer links change `color`,
+          // cards/buttons change `background-color`); default keeps old behavior.
+          const cssProp = h.prop || 'background-color';
           try {
-            const before = await targetPage.evaluate((sel) => {
-              const el = document.querySelector(sel);
-              return el ? getComputedStyle(el).backgroundColor : null;
-            }, h.selector);
+            const read = (sel, prop) => targetPage.evaluate(([s, p]) => {
+              const el = document.querySelector(s);
+              return el ? getComputedStyle(el).getPropertyValue(p) : null;
+            }, [sel, prop]);
+            const before = await read(h.selector, cssProp);
             await targetPage.hover(h.selector, { timeout: 3000 });
             await targetPage.waitForTimeout(250);
-            const after = await targetPage.evaluate((sel) => {
-              const el = document.querySelector(sel);
-              return el ? getComputedStyle(el).backgroundColor : null;
-            }, h.selector);
+            const after = await read(h.selector, cssProp);
             hoverRows.push({
-              side: h.side, selector: h.selector, before, after, changed: before !== after,
+              side: h.side, selector: h.selector, prop: cssProp, before, after, changed: before !== after,
             });
           } catch (e) {
-            hoverRows.push({ side: h.side, selector: h.selector, error: e.message.split('\n')[0] });
+            hoverRows.push({ side: h.side, selector: h.selector, prop: cssProp, error: e.message.split('\n')[0] });
           }
         }
       }
 
+      // Alignment: compare which side of the bar each element sits on. A mirrored
+      // layout (e.g. mobile hamburger left vs right) is invisible to a property diff.
+      const alignmentRows = [];
+      for (const a of spec.alignmentPairs || []) {
+        const srcSide = horizontalSide(liveProps[a.centerProp], liveProps[a.barProp]);
+        const migSide = horizontalSide(edsProps[a.centerProp], edsProps[a.barProp]);
+        if (srcSide == null && migSide == null) continue;
+        alignmentRows.push({
+          label: a.label, source: srcSide || 'n/a', migrated: migSide || 'n/a', mismatch: srcSide !== migSide,
+        });
+      }
+
+      // Composition: relative layout of two regions (e.g. links BESIDE vs BELOW
+      // description) + render mode (icon vs text). Both are invisible to a
+      // property-level diff — they were the footer gaps that slipped through.
+      const layoutRows = [];
+      if (spec.regionPairs && (live.regions || eds.regions)) {
+        for (const rp of spec.regionPairs) {
+          const srcRel = layoutRelation(live.regions?.[rp.a], live.regions?.[rp.b]);
+          const migRel = layoutRelation(eds.regions?.[rp.a], eds.regions?.[rp.b]);
+          if (srcRel == null && migRel == null) continue;
+          layoutRows.push({
+            label: rp.label, source: srcRel || 'n/a', migrated: migRel || 'n/a', mismatch: srcRel !== migRel,
+          });
+        }
+      }
+      if (spec.renderModeOf && (live.social || eds.social)) {
+        const srcMode = live.social ? renderMode(live.social) : 'n/a';
+        const migMode = eds.social ? renderMode(eds.social) : 'n/a';
+        layoutRows.push({
+          label: spec.renderModeOf, source: srcMode, migrated: migMode, mismatch: srcMode !== migMode,
+        });
+      }
+
       results[blockName] = results[blockName] || {};
       results[blockName][vpName] = {
-        liveInfo: live.info, edsInfo: eds.info, rows, contrastRows, hoverRows,
+        liveInfo: live.info, edsInfo: eds.info, rows, contrastRows, hoverRows, alignmentRows, layoutRows,
       };
     }
     await livePage.close();
@@ -432,6 +714,8 @@ try {
 let md = `# Block audit — ${path_}\n\nSource: ${base}${path_}\nMigrated: ${candidate}${path_}\nViewports: ${selectedViewports.join(', ')}\n\nLegend: 🔴 clear divergence · 🟡 minor · 🟢 negligible\n\n`;
 let totalFlagged = 0;
 let totalContrastFail = 0;
+let totalMisaligned = 0;
+let totalLayoutIssues = 0;
 
 for (const blockName of selectedBlocks) {
   md += `## ${blockName}\n\n`;
@@ -458,13 +742,47 @@ for (const blockName of selectedBlocks) {
       }
       md += '\n';
     }
-    if (r.hoverRows.length) {
-      md += '**Hover state (desktop)**\n\n| Side | Selector | Before | After | Changed |\n|---|---|---|---|---|\n';
-      for (const h of r.hoverRows) {
-        md += `| ${h.side} | \`${h.selector}\` | ${h.before || h.error || 'n/a'} | ${h.after || ''} | ${h.error ? '⚠️ error' : (h.changed ? '✅ yes' : '— no change')} |\n`;
+    if (r.alignmentRows && r.alignmentRows.length) {
+      md += '**Alignment (which side of the bar)**\n\n| Element | Source | Migrated | Result |\n|---|---|---|---|\n';
+      for (const a of r.alignmentRows) {
+        if (a.mismatch) totalMisaligned += 1;
+        md += `| ${a.label} | ${a.source} | ${a.migrated} | ${a.mismatch ? '🔴 mirrored' : '✅ same side'} |\n`;
       }
       md += '\n';
     }
+    if (r.layoutRows && r.layoutRows.length) {
+      md += '**Layout composition (relative position / render mode)**\n\n| Aspect | Source | Migrated | Result |\n|---|---|---|---|\n';
+      for (const l of r.layoutRows) {
+        if (l.mismatch) totalLayoutIssues += 1;
+        md += `| ${l.label} | ${l.source} | ${l.migrated} | ${l.mismatch ? '🔴 differs' : '✅ same'} |\n`;
+      }
+      md += '\n';
+    }
+    if (r.hoverRows.length) {
+      md += '**Hover state (desktop)**\n\n| Side | Selector | Property | Before | After | Changed |\n|---|---|---|---|---|---|\n';
+      for (const h of r.hoverRows) {
+        md += `| ${h.side} | \`${h.selector}\` | ${h.prop || 'background-color'} | ${h.before || h.error || 'n/a'} | ${h.after || ''} | ${h.error ? '⚠️ error' : (h.changed ? '✅ yes' : '— no change')} |\n`;
+      }
+      md += '\n';
+    }
+  }
+}
+
+// ---- page-level section transitions (once per viewport, EDS side) ----
+let totalSectionIssues = 0;
+const hasSectionIssues = Object.values(sectionAudit).some((list) => list && list.length);
+if (hasSectionIssues) {
+  md += '## page: section transitions\n\n';
+  for (const vpName of selectedViewports) {
+    const issues = sectionAudit[vpName] || [];
+    md += `### ${vpName}\n\n`;
+    if (!issues.length) { md += '✓ no gaps or empty-section artifacts\n\n'; continue; }
+    md += '| Kind | Where | Severity | Detail |\n|---|---|---|---|\n';
+    for (const i of issues) {
+      totalSectionIssues += 1;
+      md += `| ${i.kind} | ${i.between || `#${i.at}`} | ${i.severity} | ${i.detail} |\n`;
+    }
+    md += '\n';
   }
 }
 
@@ -472,5 +790,5 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(outFile, md);
 console.log(md);
 console.log(`Full report written to ${outFile}`);
-console.log(`\n${totalFlagged} non-negligible propert${totalFlagged === 1 ? 'y' : 'ies'} differ across ${selectedBlocks.length} block(s) × ${selectedViewports.length} viewport(s); ${totalContrastFail} contrast check(s) FAILED WCAG AA.`);
+console.log(`\n${totalFlagged} non-negligible propert${totalFlagged === 1 ? 'y' : 'ies'} differ across ${selectedBlocks.length} block(s) × ${selectedViewports.length} viewport(s); ${totalContrastFail} contrast check(s) FAILED WCAG AA; ${totalMisaligned} alignment mismatch(es); ${totalLayoutIssues} layout-composition issue(s); ${totalSectionIssues} section-transition issue(s).`);
 process.exit(0); // advisory — on-demand report, never blocks
