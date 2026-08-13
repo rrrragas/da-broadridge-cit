@@ -1,18 +1,13 @@
 name: Visual
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'blocks/**'
-      - 'scripts/**'
-      - 'styles/**'
-      - 'head.html'
-      - 'tools/quality/broadridge-visual-check.mjs'
-      - 'tools/quality/broadridge-visual-parse-pr.mjs'
-      - 'tools/quality/broadridge-visual-matrix.mjs'
-      - 'tools/quality/broadridge-visual.config.json'
   workflow_dispatch: {}
 
+# Manual-only (no `pull_request` trigger) — visual checks run locally via the npm scripts below and
+# the broadridge-visual-block/broadridge-visual-fullpage skills, to avoid Actions minutes/artifact
+# storage billing on every PR. This workflow is kept so the same matrix can still be run on demand
+# from the Actions tab when wanted (e.g. `npm run broadridge:test:visual`, `npm run
+# broadridge:visual:all`, `npm run broadridge:check:visual`, `npm run broadridge:audit:blocks`).
+#
 # Matrix of {regression, parity} × {fullpage, block}, PRUNED by the `checks` toggles in
 # tools/quality/broadridge-visual.config.json (the `setup` job builds the matrix). Disabled combos don't run.
 # URLs come from the PR description's `visual:start` block; regression+fullpage falls back to the default
