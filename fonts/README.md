@@ -18,3 +18,10 @@ Latin subset, weights 400 (Regular) and 700 (Bold).
 
 When a licensed FreightSans Pro web font is available it renders first (see `styles/fonts.css`);
 these files then serve only as the pre-load fallback.
+
+## FreightSans Pro web fonts
+
+`freightsans-pro-{light,book,medium,semibold}.woff2` are the delivered webfont faces. They are
+registered as the `freightsans` family in `styles/fonts.css`; the Hero additionally uses the
+source-compatible Book and Light aliases for exact migration parity. `modules.ttf` is an unrelated
+icon font and is not used.

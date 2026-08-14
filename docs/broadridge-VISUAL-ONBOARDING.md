@@ -85,7 +85,7 @@ npm run broadridge:test:visual -- --mode parity --scope block --path /cit      #
 1. **Loads** Playwright + pixelmatch + pngjs (prints an install hint and stops if missing).
 2. **Reads the config** (URLs, threshold, viewports) and the **manifest** (list of pages); `--path` narrows to one.
 3. **Launches headless Chrome.**
-4. **For each page × each viewport** (mobile 375 / tablet 768 / desktop 1200):
+4. **For each page × each viewport** (mobile 300 / tablet 600 / desktop 1200):
    1. Resolves the two URLs (config base + path, and candidate + path).
    2. **Screenshots both** in parallel: navigate → wait for network idle → wait 1.5 s for fonts/animations → capture.
       In `block` scope it captures **just that element**; in `fullpage` the whole scrolling page.

@@ -4,28 +4,49 @@
  * Web font definitions.
  *
  * The Broadridge / Matrix Trust brand uses the proprietary FreightSans Pro
- * family. No licensed font binaries are committed to this repo. Until a
- * license that covers the EDS delivery domains (*.aem.page / *.aem.live and
- * the eventual production host) is confirmed, the brand stack renders a
- * METRIC-MATCHED fallback — see the `freightsans-fallback` @font-face blocks
- * in styles/styles.css, tuned (size-adjust + ascent/descent overrides,
- * measured from broadridge.com/cit) so the fallback occupies the same line box
- * and advance width as FreightSans and layout does not shift.
- *
- * To switch to the real font once licensed:
- *   1. Obtain the licensed FreightSans Pro web files (.woff2) from Broadridge's
- *      own licensed source — NOT by scraping the live site.
- *   2. Drop them in /fonts/ and declare them below as family `freightsans`
- *      (weights 300/400/500/600 -> Light/Book/Medium/Semibold), e.g.:
- *
- *      @font-face {
- *        font-family: freightsans;
- *        font-weight: 400;
- *        font-display: swap;
- *        src: url('/fonts/freightsans-book.woff2') format('woff2');
- *      }
- *
- * `freightsans` is already first in --body-font-family (styles/styles.css), so
- * once these faces exist the real font renders and freightsans-fallback becomes
- * the pre-load fallback — no other change required.
+ * family. The four supplied WOFF2 faces below are registered as `freightsans`
+ * and take precedence over the metric-matched fallback in styles/styles.css.
  */
+
+@font-face {
+  font-family: freightsans;
+  font-weight: 1 349;
+  font-display: swap;
+  src: url('/fonts/freightsans-pro-light.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: freightsans;
+  font-weight: 350 549;
+  font-display: swap;
+  src: url('/fonts/freightsans-pro-book.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: freightsans;
+  font-weight: 550 649;
+  font-display: swap;
+  src: url('/fonts/freightsans-pro-medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: freightsans;
+  font-weight: 650 1000;
+  font-display: swap;
+  src: url('/fonts/freightsans-pro-semibold.woff2') format('woff2');
+}
+
+/* Source-compatible face names used where Crownpeak selects a face explicitly. */
+@font-face {
+  font-family: 'freightsans_prolight';
+  font-weight: 1 1000;
+  font-display: swap;
+  src: url('/fonts/freightsans-pro-light.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'freightsans_probook';
+  font-weight: 1 1000;
+  font-display: swap;
+  src: url('/fonts/freightsans-pro-book.woff2') format('woff2');
+}

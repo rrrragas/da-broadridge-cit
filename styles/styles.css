@@ -24,6 +24,7 @@
   --brand-navy: #001f5a;
   --brand-navy-deep: #00102d; /* footer social sub-bar */
   --brand-accent: #40b8ff;
+  --hero-overlay-color: rgb(22 22 29 / 50%);
   --brand-check: #2e8b57; /* "CITs are" green check */
   --brand-cross: #c0392b; /* "CITs are not" red X */
 
@@ -45,6 +46,8 @@
   /* fonts — brand uses proprietary FreightSans; use a humanist sans fallback stack */
   --body-font-family: freightsans, freightsans-fallback, helvetica, arial, sans-serif;
   --heading-font-family: var(--body-font-family);
+  --freightsans-book-family: freightsans_probook, helvetica, arial, lucida, sans-serif;
+  --freightsans-light-family: freightsans_prolight, sans-serif;
 
   /* headings on the source render light-weight */
   --heading-font-weight: 300;

@@ -39,6 +39,7 @@ import {
   contrastRatio, wcagAAThreshold,
   horizontalSide, layoutRelation, auditSectionTransitions,
 } from './lib/style-audit-utils.mjs';
+import { VISUAL_VIEWPORTS, formatVisualViewportSummary } from './lib/visual-comparison-utils.mjs';
 
 let chromium;
 try {
@@ -89,17 +90,12 @@ try {
   }
 } catch { /* optional */ }
 
-const VIEWPORTS = {
-  mobile: { width: 375, height: 812 },
-  tablet: { width: 768, height: 1024 },
-  desktop: { width: 1200, height: 800 },
-};
-const selectedViewports = (arg('viewport') || Object.keys(VIEWPORTS).join(',')).split(',').map((s) => s.trim()).filter(Boolean);
+const selectedViewports = (arg('viewport') || Object.keys(VISUAL_VIEWPORTS).join(',')).split(',').map((s) => s.trim()).filter(Boolean);
 
 // The style props compared on each matched node. Generic and role-agnostic; the
 // diff only surfaces the ones that actually differ and aren't negligible.
 const STYLE_PROPS = [
-  'color', 'font-size', 'font-weight', 'line-height', 'letter-spacing',
+  'color', 'font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing',
   'text-transform', 'text-decoration-line', 'background-color', 'border-radius', 'text-align',
 ];
 
@@ -116,12 +112,12 @@ async function capture(pageObj, selector) {
       if (t === 'a') return 'link';
       if (t === 'li') return 'listitem';
       if (t === 'button') return 'button';
-      if (t === 'p') return 'text';
+      if (t === 'p' || t === 'span') return 'text';
       return null;
     };
     // Only capture "salient" leaf-ish nodes: headings, links, list items,
     // buttons, paragraphs, images. Skip pure layout wrappers.
-    const SEL = 'h1,h2,h3,h4,h5,h6,a,li,button,p,img';
+    const SEL = 'h1,h2,h3,h4,h5,h6,a,li,button,p,span,img';
     // logical text-align keywords compute to physical sides in LTR; normalize so
     // `start` (EDS default) doesn't read as a diff against the source's `left`.
     const normAlign = (v) => ({ start: 'left', end: 'right' }[v] || v);
@@ -206,7 +202,7 @@ const rows = []; // report rows across viewports
 const browser = await chromium.launch();
 try {
   for (const vpName of selectedViewports) {
-    const vp = VIEWPORTS[vpName];
+    const vp = VISUAL_VIEWPORTS[vpName];
     const srcPage = await browser.newPage();
     const migPage = await browser.newPage();
     await srcPage.setViewportSize(vp);
@@ -386,7 +382,7 @@ const realAddedOf = (r) => r.added.filter((n) => (n.text || n.src) && !isAllowed
 
 const modeLabel = pageMode ? `page ${pagePath}` : `${sourceSelector}  →  ${destSelector}`;
 let md = `# Visual compare (generic, content-anchored) — ${modeLabel}\n\n`;
-md += `Source: ${base}${pagePath}  \nMigrated: ${candidate}${pagePath}  \nMode: ${pageMode ? 'whole-page' : 'block/region (selector)'}  \nViewports: ${selectedViewports.join(', ')}\n\n`;
+md += `Source: ${base}${pagePath}  \nMigrated: ${candidate}${pagePath}  \nMode: ${pageMode ? 'whole-page' : 'block/region (selector)'}  \nViewports: ${formatVisualViewportSummary(selectedViewports)}\n\n`;
 md += 'Legend: 🔴 clear divergence · 🟡 minor · 🟢 match · missing = in source, absent in migration · added = migration-only\n\n';
 
 let hardFindings = 0;
@@ -473,6 +469,26 @@ if (findingRows.length) {
     md += `| ${cell(f.property)} | ${cells.join(' | ')} | ${f.sev} |\n`;
   }
   md += '\n> `source→migrated` = differing values · `✓` = matches at that viewport · `missing` = absent in migration · `ratio<threshold` = WCAG fail\n\n';
+
+  const critical = findingRows.filter((finding) => finding.sev === '🔴');
+  const review = findingRows.filter((finding) => finding.sev === '🟡');
+  md += '## Recommended next steps\n\n';
+  if (critical.length) {
+    md += '### Fix before merge\n\n';
+    critical.forEach((finding) => {
+      const evidence = Object.entries(finding.cells).map(([vp, value]) => `${vp} (${value})`).join('; ');
+      md += `- **${cell(finding.property)}** — Resolve this clear divergence: ${cell(evidence)}.\n`;
+    });
+    md += '\n';
+  }
+  if (review.length) {
+    md += '### Review with the visual artifact\n\n';
+    review.forEach((finding) => {
+      const evidence = Object.entries(finding.cells).map(([vp, value]) => `${vp} (${value})`).join('; ');
+      md += `- **${cell(finding.property)}** — Confirm whether this visual difference is intentional: ${cell(evidence)}.\n`;
+    });
+    md += '\n';
+  }
 }
 
 for (const r of rows) {
