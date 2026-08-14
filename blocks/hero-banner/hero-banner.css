@@ -17,8 +17,8 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 95px 24px 56px; /* match source vertical rhythm (95px top / 56px bottom) */
-  min-height: 280px; /* + padding lands ~431px, close to source 422 (mobile) / 439 (tablet) */
+  padding: 95px 0 56px; /* source has no horizontal inset */
+  min-height: 295px; /* + padding matches the 446px source mobile hero */
   overflow: hidden;
 }
 
@@ -28,7 +28,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgb(0 31 90 / 45%), rgb(0 31 90 / 60%));
+  background: var(--hero-overlay-color); /* match the source photo overlay */
 }
 
 .hero-banner h1,
@@ -45,15 +45,18 @@
 }
 
 .hero-banner h1 {
+  font-family: var(--freightsans-book-family);
   margin-top: 0;
   margin-bottom: 16px; /* source mobile ~15px; global 0.25em was too tight on tablet/desktop */
   font-size: 36px; /* source mobile — global heading scale (64px) is oversized here */
+  font-weight: 200; /* source FreightSans Pro Light weight */
   line-height: 1; /* source mobile 36px/36px */
   letter-spacing: -1.5px; /* source hero H1 */
 }
 
 /* subhead — source is 16px/500 through tablet, upsized + lighter on desktop */
 .hero-banner p {
+  font-family: var(--freightsans-book-family);
   margin-top: 0;
   font-size: 16px; /* source mobile/tablet subhead */
   font-weight: 500;
@@ -77,22 +80,29 @@
 
 .hero-banner img {
   object-fit: cover;
+  object-position: center bottom;
   width: 100%;
   height: 100%;
 }
 
-/* tablet + desktop: source hero H1 is 72px from ~768px up, with roomier spacing */
 @media (width >= 600px) {
+  .hero-banner {
+    min-height: 199px; /* + padding matches the 350px source tablet hero */
+  }
+}
+
+/* desktop: source hero H1 uses the larger scale and roomier spacing */
+@media (width >= 900px) {
   .hero-banner h1 {
-    margin-bottom: 40px; /* source tablet/desktop */
-    font-size: 72px; /* source tablet/desktop */
-    line-height: 1.03; /* source 74px/72px */
+    font-family: var(--freightsans-light-family);
+    margin-bottom: 40px; /* source desktop */
+    font-size: 72px; /* source desktop */
+    line-height: 74px; /* source desktop */
   }
 }
 
 @media (width >= 900px) {
   .hero-banner {
-    padding: 95px 32px 56px; /* wider gutters; same 95/56 vertical rhythm */
     min-height: 216px; /* + padding lands ~367px, matching source desktop */
   }
 

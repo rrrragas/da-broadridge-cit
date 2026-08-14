@@ -7,6 +7,15 @@
   "localCandidate": "http://localhost:3000",
   "threshold": 0.001,
   "viewports": ["mobile", "tablet", "desktop"],
+  "capture": {
+    "_README": "Hide dynamic or consent overlays during capture. Hidden elements retain layout, so real page shifts remain visible.",
+    "base": {
+      "hideSelectors": ["#onetrust-banner-sdk"]
+    },
+    "candidate": {
+      "hideSelectors": []
+    }
+  },
   "checks": {
     "_README": "CI only: which combos run on PRs. Matrix = enabled sources × enabled scopes. Local CLI ignores these.",
     "regression": true,

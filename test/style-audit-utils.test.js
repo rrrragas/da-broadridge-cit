@@ -258,4 +258,12 @@ describe('diffMatchedNode', () => {
     };
     expect(diffMatchedNode(pair, ['color'])).toHaveLength(0);
   });
+
+  it('compares CSS font families without case-only noise', () => {
+    const pair = {
+      source: { styles: { 'font-family': 'freightsans_probook, Helvetica, Arial' } },
+      migrated: { styles: { 'font-family': 'freightsans_probook, helvetica, arial' } },
+    };
+    expect(diffMatchedNode(pair, ['font-family'])).toHaveLength(0);
+  });
 });

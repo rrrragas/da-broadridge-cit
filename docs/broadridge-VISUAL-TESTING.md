@@ -7,6 +7,7 @@ before merge. Runs as a **local pre-check** and a **PR CI job**. Rules: [broadri
 
 Compare a **BASE (before)** against a **CANDIDATE (after)** for a manifest of page paths, at mobile / tablet /
 desktop. Both sides render in the same browser, so there are **no baseline PNGs in git** and no font/AA mismatch.
+The project capture matrix is **300px mobile** (`<600px` CSS), **600px tablet** (`600–899px`), and **1200px desktop** (`≥900px`).
 `--base` / `--candidate` are just URLs — point them at whatever you need:
 
 | Mode | BASE (before) | CANDIDATE (after) | Answers |
@@ -32,6 +33,7 @@ Project defaults live in `tools/quality/broadridge-visual.config.json`, so you r
 | `localCandidate` | AFTER for local runs (`http://localhost:3000`) |
 | `threshold`, `viewports` | diff sensitivity + which sizes to capture |
 | `checks` | **CI on/off toggles** — `regression`, `parity`, `fullpage`, `block` (all default `true`) |
+| `capture.base/candidate.hideSelectors` | optional selectors hidden only during the relevant screenshot, for consent or other dynamic overlays |
 
 **Turning CI checks on/off (`checks`):** the PR matrix is the cross-product of enabled **sources**
 (`regression`/`parity`) × enabled **scopes** (`fullpage`/`block`). Set any to `false` to drop those checks —

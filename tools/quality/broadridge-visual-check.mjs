@@ -23,6 +23,7 @@
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
+import { VISUAL_VIEWPORTS, formatVisualViewportSummary } from './lib/visual-comparison-utils.mjs';
 
 // ---- deps (lazy so a clear message shows if they're missing) ----
 let chromium;
@@ -67,12 +68,6 @@ const cliBaseSelector = arg('base-selector'); // block-scope: selector for the b
 // base/candidate above come from --flag, else the config (by mode), else null. A manifest target may
 // still carry its own full `base`/`candidate` URLs (PR-supplied). Targets that resolve to neither are skipped.
 
-const VIEWPORTS = {
-  mobile: { width: 375, height: 667 },
-  tablet: { width: 768, height: 1024 },
-  desktop: { width: 1200, height: 800 },
-};
-
 const stripTrailing = (u) => u.replace(/\/+$/, '');
 const slug = (s) => s.replace(/[^\w]+/g, '_').replace(/^_|_$/g, '') || 'root';
 
@@ -101,6 +96,17 @@ if (manifestPath) {
   process.exit(reportOnly ? 0 : 1);
 }
 if (onlyPath) manifest = manifest.filter((t) => (t.edsPath || t.path) === onlyPath);
+// A requested block/selector must narrow the configured targets. Without this,
+// every selector-bearing target on the same page would run, which defeats a
+// developer's explicit `--block hero-banner` request.
+if (scope === 'block' && (cliBlock || cliSelector)) {
+  const requestedSelector = cliSelector || `.${cliBlock}`;
+  manifest = manifest.filter((target) => (
+    target.block === cliBlock
+    || target.edsSelector === requestedSelector
+    || target.selector === requestedSelector
+  ));
+}
 if (!manifest.length) { console.error('No targets to check.'); process.exit(reportOnly ? 0 : 1); }
 
 mkdirSync(outDir, { recursive: true });
@@ -109,13 +115,17 @@ mkdirSync(outDir, { recursive: true });
  * Screenshot url at a viewport → { ok, buffer }. With `selector`, captures just that element
  * (block-level); otherwise the full page. ok:false on non-200, nav error, or missing selector.
  */
-async function shoot(browser, url, vp, selector) {
+async function shoot(browser, url, vp, selector, hideSelectors = []) {
   const page = await browser.newPage();
   try {
     await page.setViewportSize(vp);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const resp = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
     if (!resp || resp.status() >= 400) return { ok: false, reason: `HTTP ${resp ? resp.status() : 'no-response'}` };
+    if (hideSelectors.length) {
+      const rules = hideSelectors.map((hideSelector) => `${hideSelector} { visibility: hidden !important; }`).join('\n');
+      await page.addStyleTag({ content: rules });
+    }
     await page.waitForTimeout(1500); // settle animations/fonts
     let buffer;
     if (selector) {
@@ -162,10 +172,10 @@ try {
     // defaulting to edsPath when they match. (`path`/`legacyPath` accepted as aliases; CI passes full URLs.)
     const edsPath = target.edsPath || target.path;
     const livePath = target.livePath || target.legacyPath || edsPath;
-    const cfgVps = Array.isArray(config.viewports) && config.viewports.length ? config.viewports : Object.keys(VIEWPORTS);
+    const cfgVps = Array.isArray(config.viewports) && config.viewports.length ? config.viewports : Object.keys(VISUAL_VIEWPORTS);
     const vps = (target.viewports && target.viewports.length ? target.viewports : cfgVps);
     for (const vpName of vps) {
-      const vp = VIEWPORTS[vpName];
+      const vp = VISUAL_VIEWPORTS[vpName];
       if (!vp) { console.warn(`skip unknown viewport "${vpName}"`); continue; }
       const label = `${edsPath} @ ${vpName}`;
       if (scope === 'fullpage') {
@@ -198,9 +208,11 @@ try {
           continue;
         }
       }
+      const baseHideSelectors = target.capture?.base?.hideSelectors || config.capture?.base?.hideSelectors || [];
+      const candidateHideSelectors = target.capture?.candidate?.hideSelectors || config.capture?.candidate?.hideSelectors || [];
       const [b, c] = await Promise.all([
-        shoot(browser, baseUrl, vp, baseSel),
-        shoot(browser, candUrl, vp, candSel),
+        shoot(browser, baseUrl, vp, baseSel, baseHideSelectors),
+        shoot(browser, candUrl, vp, candSel, candidateHideSelectors),
       ]);
       if (!b.ok || !c.ok) {
         const why = [!b.ok && `base ${b.reason}`, !c.ok && `candidate ${c.reason}`].filter(Boolean).join(', ');
@@ -239,7 +251,9 @@ try {
 const changed = rows.filter((r) => r.status === 'CHANGED');
 const skipped = rows.filter((r) => r.status === 'skipped');
 let md = `## Visual diff (${scope}) — base vs candidate\n\n`;
-md += `Base: ${base || '(per-target)'}\nCandidate: ${candidate || '(per-target)'}\nScope: ${scope}\nThreshold: ${(threshold * 100).toFixed(3)}%\n\n`;
+const reportViewports = Array.isArray(config.viewports) && config.viewports.length
+  ? config.viewports : Object.keys(VISUAL_VIEWPORTS);
+md += `Base: ${base || '(per-target)'}\nCandidate: ${candidate || '(per-target)'}\nScope: ${scope}\nViewports: ${formatVisualViewportSummary(reportViewports)}\nThreshold: ${(threshold * 100).toFixed(3)}%\n\n`;
 md += `| Target | Status | Diff | Artifacts |\n|---|---|---|---|\n`;
 for (const r of rows) {
   const diffCol = r.ratio !== undefined ? `${(r.ratio * 100).toFixed(3)}%` : (r.detail || '');

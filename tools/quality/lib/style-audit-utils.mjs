@@ -254,7 +254,9 @@ export function diffMatchedNode(pair, props) {
     const sv = pair.source?.styles?.[key];
     const mv = pair.migrated?.styles?.[key];
     if (sv == null && mv == null) continue;
-    if (String(sv) === String(mv)) continue;
+    const sourceValue = String(sv);
+    const migratedValue = String(mv);
+    if ((key === 'font-family' ? sourceValue.toLowerCase() === migratedValue.toLowerCase() : sourceValue === migratedValue)) continue;
     const cls = classify(key, sv, mv);
     if (cls.icon === '🟢') continue;
     rows.push({
